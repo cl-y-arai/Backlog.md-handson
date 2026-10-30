@@ -15,6 +15,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { SuccessToast } from './components/SuccessToast';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TaskIdIndexProvider } from './contexts/TaskIdIndexContext';
+import { useI18n } from './contexts/LanguageContext';
 import {
 	type Decision,
 	type DecisionSearchResult,
@@ -208,6 +209,11 @@ type TaskModalState =
     };
 
 function AppContent() {
+  const { t } = useI18n();
+  // Callbacks read the current dictionary through a ref, so switching language does not rebuild them
+  // (and re-run the data loading and routing effects that depend on them).
+  const tRef = useRef(t);
+  tRef.current = t;
   const [modal, setModal] = useState<TaskModalState>({ kind: 'closed' });
   // Each entry into the modal takes the next session number, so a response can name the modal it
   // was read for.
@@ -456,7 +462,7 @@ function AppContent() {
     } catch (error) {
       if (loadAllDataRequestRef.current === requestId) {
         console.error('Failed to load data:', error);
-        applyLoadError(error instanceof Error ? error : new Error('Failed to load data'));
+        applyLoadError(error instanceof Error ? error : new Error(tRef.current.app.loadDataFailed));
       }
     } finally {
       if (loadAllDataRequestRef.current === requestId) {
@@ -484,9 +490,9 @@ function AppContent() {
   // Update document title when project name changes
   React.useEffect(() => {
     if (projectName) {
-      document.title = `${projectName} - Task Management`;
+      document.title = t.app.documentTitle(projectName);
     }
-  }, [projectName]);
+  }, [projectName, t]);
 
   // Mark that we've been running after initial load
   useEffect(() => {
@@ -602,7 +608,7 @@ function AppContent() {
       clearTaskModal();
       navigate(`${routeBasePath}${location.search}`, {
         replace: true,
-        state: { taskRouteError: `"${routeTaskId}" is not a valid task ID.` } satisfies TaskRouteNavigationState,
+        state: { taskRouteError: tRef.current.app.taskRoute.invalidTaskId(routeTaskId) } satisfies TaskRouteNavigationState,
       });
       return;
     }
@@ -740,14 +746,15 @@ function AppContent() {
     (taskId: string, error: unknown, fromRoute: boolean) => {
       clearTaskModal();
       if (!fromRoute || !routeBasePath) return;
+      const routeMessages = tRef.current.app.taskRoute;
       const message =
         error instanceof ApiError && error.status === 409
-          ? `Task "${taskId}" is ambiguous. Repair duplicate task IDs before opening this link.`
+          ? routeMessages.ambiguous(taskId)
           : error instanceof ApiError && error.status === 400
-            ? `"${taskId}" is not a valid task ID.`
+            ? routeMessages.invalidTaskId(taskId)
             : error instanceof ApiError && error.status === 404
-              ? `Task "${taskId}" was not found.`
-              : `Task "${taskId}" could not be opened. Try again.`;
+              ? routeMessages.notFound(taskId)
+              : routeMessages.openFailed(taskId);
       navigate(`${routeBasePath}${location.search}`, {
         replace: true,
         state: { taskRouteError: message } satisfies TaskRouteNavigationState,
@@ -900,7 +907,7 @@ function AppContent() {
       if (readMovedFailureState(error, 'archiveState')) {
         handleCloseModal();
         try {
-          window.alert('The task was archived, but committing the change failed. Check the repository before retrying.');
+          window.alert(t.app.archiveCommitFailed);
         } catch {
           // A blocked dialog must not take the refresh down with it.
         }
@@ -918,7 +925,7 @@ function AppContent() {
       <ThemeProvider>
         <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900" role="status">
           <LoadingSpinner size="md" text="" />
-          <span className="sr-only">Loading</span>
+          <span className="sr-only">{t.app.loading}</span>
         </div>
       </ThemeProvider>
     );
@@ -1007,7 +1014,7 @@ function AppContent() {
                 <Navigate
                   to={{ pathname: '/board', search: location.search }}
                   replace
-                  state={{ taskRouteError: 'That task link is not valid.' } satisfies TaskRouteNavigationState}
+                  state={{ taskRouteError: t.app.taskRoute.invalidLink } satisfies TaskRouteNavigationState}
                 />
               }
             />
@@ -1020,7 +1027,7 @@ function AppContent() {
                 <Navigate
                   to={{ pathname: '/tasks', search: location.search }}
                   replace
-                  state={{ taskRouteError: 'That task link is not valid.' } satisfies TaskRouteNavigationState}
+                  state={{ taskRouteError: t.app.taskRoute.invalidLink } satisfies TaskRouteNavigationState}
                 />
               }
             />
@@ -1063,7 +1070,7 @@ function AppContent() {
             className="shrink-0 font-medium underline decoration-red-300 underline-offset-2 hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500"
             onClick={() => navigate(`${location.pathname}${location.search}`, { replace: true, state: null })}
           >
-            Dismiss
+            {t.common.dismiss}
           </button>
         </div>
       )}
@@ -1101,7 +1108,7 @@ function AppContent() {
       {/* Task Creation Confirmation Toast */}
       {taskConfirmation && (
         <SuccessToast
-          message={`${taskConfirmation.isDraft ? 'Draft' : 'Task'} "${taskConfirmation.task.title}" created successfully! (${taskConfirmation.task.id.replace('task-', '')})`}
+          message={t.app.taskCreated(taskConfirmation.isDraft, taskConfirmation.task.title, taskConfirmation.task.id.replace('task-', ''))}
           onDismiss={() => setTaskConfirmation(null)}
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

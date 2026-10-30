@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useI18n } from '../contexts/LanguageContext';
 
 const PROJECT_BADGE_PALETTES = [
   'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -34,6 +35,7 @@ interface ProjectBadgeProps {
 }
 
 const ProjectBadge: React.FC<ProjectBadgeProps> = ({ project, availableProjects, className = '' }) => {
+  const { t } = useI18n();
   const label = project?.trim();
   if (!label || !availableProjects?.length) {
     return null;
@@ -42,7 +44,7 @@ const ProjectBadge: React.FC<ProjectBadgeProps> = ({ project, availableProjects,
   return (
     <span
       data-task-project={label}
-      title={`Project: ${label}`}
+      title={t.board.card.projectTitle(label)}
       className={`inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-4 ${PROJECT_BADGE_PALETTES[getPaletteIndex(label, availableProjects)]} ${className}`}
     >
       <span className="truncate">{label}</span>

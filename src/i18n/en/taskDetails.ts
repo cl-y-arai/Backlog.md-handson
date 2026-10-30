@@ -1,0 +1,155 @@
+export const taskDetails = {
+	modal: {
+		createDraftTitle: "Create New Draft",
+		createTaskTitle: "Create New Task",
+		demoteTooltip: "Move task to drafts",
+		demoting: "Demoting…",
+		demoteShort: "Demote",
+		demoteLong: "Demote to draft",
+		saving: "Saving…",
+	},
+	confirm: {
+		discardAndLeave: "Discard unsaved changes and leave this task?",
+		discardChanges: "Discard unsaved changes?",
+		discardAndClose: "Discard unsaved changes and close?",
+		demote: (title: string) => `Demote "${title}" to draft? It will be moved to the drafts folder.`,
+		archive: (title: string) =>
+			`Archive "${title}"? It moves off the board. Its ID, record, dependencies, and references are kept.`,
+	},
+	errors: {
+		titleRequired: "Title is required",
+		saveFailed: "Failed to save task",
+		commentBodyDelimiter: "Comment body cannot contain standalone '---' delimiter lines.",
+		commentAuthorDelimiter: "Comment author cannot contain standalone '---' delimiter lines.",
+	},
+	demotion: {
+		refreshFailed:
+			"The task was moved to drafts, but refreshing the view failed. Close this dialog and verify the draft before retrying.",
+		cleanupFailed:
+			"The task was moved to drafts, but removing references from dependent tasks failed. Some dependent tasks may still reference it. The view was refreshed; check those tasks before retrying.",
+		commitFailed:
+			"The task was moved to drafts, but recording the Git commit failed. The view was refreshed; verify the draft before retrying.",
+		laterStepFailed:
+			"The task was moved to drafts, but a later step failed. The view was refreshed; verify the draft and dependent tasks before retrying.",
+		filesystemFailed:
+			"The demotion encountered a filesystem failure and may have left both task and draft copies. The view was refreshed; inspect them before retrying.",
+		responseLost:
+			"The demotion request may have succeeded, but its response was lost. Check the task and drafts views before retrying.",
+	},
+	readOnly: {
+		label: "Read-only:",
+		branchBefore: "This task exists in the ",
+		branchAfter: " branch. Switch to that branch to edit it.",
+		archived: "This task is archived.",
+	},
+	hierarchy: {
+		ariaLabel: "Task hierarchy",
+		parent: "Parent",
+		openParent: (id: string, title: string, status: string) => `Open parent task ${id}: ${title} (${status})`,
+		openSubtask: (id: string, title: string, status: string) => `Open subtask ${id}: ${title} (${status})`,
+		progress: (completed: number, total: number) => `${completed} of ${total} complete`,
+	},
+	sections: {
+		title: "Title",
+		description: "Description",
+		subtasks: "Subtasks",
+		references: "References",
+		modifiedFiles: "Modified files",
+		documentation: "Documentation",
+		acceptanceCriteria: "Acceptance Criteria",
+		definitionOfDone: "Definition of Done",
+		dependencyGraph: "Dependency Graph",
+		implementationPlan: "Implementation Plan",
+		implementationNotes: "Implementation Notes",
+		comments: "Comments",
+		finalSummary: "Final Summary",
+		completionSummary: "Completion summary",
+		due: "Due",
+		status: "Status",
+		type: "Type",
+		assignee: "Assignee",
+		labels: "Labels",
+		priority: "Priority",
+		project: "Project",
+		milestone: "Milestone",
+		dependencies: "Dependencies",
+	},
+	empty: {
+		description: "No description",
+		references: "No references",
+		modifiedFiles: "No modified files",
+		acceptanceCriteria: "No acceptance criteria",
+		definitionOfDone: "No Definition of Done items",
+		plan: "No plan",
+		notes: "No notes",
+		comments: "No comments",
+	},
+	placeholders: {
+		title: "Enter task title",
+		reference: "URL or file path...",
+		modifiedFile: "Path from project root...",
+		commentAuthor: "Author",
+		commentBody: "Add a comment...",
+		finalSummary: "PR-style summary of what was implemented (write when task is complete)",
+		assignee: "Type name and press Enter",
+		labels: "Type label and press Enter or comma",
+	},
+	removeReference: "Remove reference",
+	removeModifiedFile: "Remove modified file",
+	toggleToUpdate: "Toggle to update",
+	addingComment: "Adding...",
+	addComment: "Add comment",
+	dates: {
+		created: "Created:",
+		updated: "Updated:",
+		due: "Due:",
+	},
+	typeSelect: {
+		ariaLabel: "Task type",
+		none: "No type",
+	},
+	notConfigured: (value: string) => `${value} (not configured)`,
+	noPriority: "No Priority",
+	projectSelect: {
+		ariaLabel: "Task project",
+		none: "No Project",
+	},
+	noMilestone: "No milestone",
+	readyToStart: "Ready to start",
+	archive: {
+		tooltip: "Move this task off the board into the archive",
+		button: "Archive Task",
+	},
+	acceptanceCriteriaEditor: {
+		newCriterionPlaceholder: "New criterion",
+	},
+	acceptanceCriteriaProgress: {
+		ariaLabel: "Acceptance criteria progress",
+		title: (checked: number, total: number) => `${checked} of ${total} acceptance criteria checked`,
+	},
+	dependencyInput: {
+		placeholderEmpty: "Type task ID or title, then press Enter or comma",
+		placeholderMore: "Add more dependencies...",
+		remove: (taskId: string) => `Remove ${taskId}`,
+	},
+	dependencyGraph: {
+		dependsOn: "Depends on",
+		dependents: "Dependents",
+		unknownId: "Unknown ID",
+		ambiguousId: "Ambiguous ID",
+		completed: "Completed",
+		cycle: "Cycle",
+		shownAbove: "Shown above",
+		open: (label: string) => `Open ${label}`,
+		sectionAriaLabel: (heading: string, count: number) => `${heading} (${count})`,
+		summary: (direct: number, total: number) => `${direct} direct, ${total} total`,
+	},
+	chipInput: {
+		remove: (item: string) => `Remove ${item}`,
+	},
+	taskTypeBadge: {
+		title: (type: string) => `Task type: ${type}`,
+	},
+};
+
+export type TaskDetailsMessages = typeof taskDetails;

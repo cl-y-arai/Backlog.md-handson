@@ -1,4 +1,5 @@
 import type { Task } from "../../types";
+import { useI18n } from "../contexts/LanguageContext";
 
 interface AcceptanceCriteriaProgressProps {
 	task: Pick<Task, "acceptanceCriteriaItems">;
@@ -25,6 +26,7 @@ const RING_RADIUS = 5;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 export default function AcceptanceCriteriaProgress({ task, density }: AcceptanceCriteriaProgressProps) {
+	const { t } = useI18n();
 	const progress = getAcceptanceCriteriaProgressCounts(task);
 	if (!progress) return null;
 
@@ -36,11 +38,11 @@ export default function AcceptanceCriteriaProgress({ task, density }: Acceptance
 			data-acceptance-criteria-progress
 			data-density={density}
 			role="progressbar"
-			aria-label="Acceptance criteria progress"
+			aria-label={t.taskDetails.acceptanceCriteriaProgress.ariaLabel}
 			aria-valuemin={0}
 			aria-valuemax={progress.total}
 			aria-valuenow={progress.checked}
-			title={`${progress.checked} of ${progress.total} acceptance criteria checked`}
+			title={t.taskDetails.acceptanceCriteriaProgress.title(progress.checked, progress.total)}
 		>
 			<svg
 				className={`-rotate-90 shrink-0 ${density === "card" ? "h-3 w-3" : "h-3.5 w-3.5"}`}

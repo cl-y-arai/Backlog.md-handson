@@ -1,0 +1,155 @@
+import type { TaskDetailsMessages } from "../en/taskDetails.ts";
+
+export const taskDetails: TaskDetailsMessages = {
+	modal: {
+		createDraftTitle: "新しい下書きを作成",
+		createTaskTitle: "新しいタスクを作成",
+		demoteTooltip: "タスクを下書きに移動",
+		demoting: "下書きに戻しています…",
+		demoteShort: "下書きへ",
+		demoteLong: "下書きに戻す",
+		saving: "保存中…",
+	},
+	confirm: {
+		discardAndLeave: "未保存の変更を破棄して、このタスクから移動しますか？",
+		discardChanges: "未保存の変更を破棄しますか？",
+		discardAndClose: "未保存の変更を破棄して閉じますか？",
+		demote: (title: string) => `「${title}」を下書きに戻しますか？下書きフォルダーに移動されます。`,
+		archive: (title: string) =>
+			`「${title}」をアーカイブしますか？ボードからは外れますが、ID・記録・依存関係・参照は保持されます。`,
+	},
+	errors: {
+		titleRequired: "タイトルは必須です",
+		saveFailed: "タスクの保存に失敗しました",
+		commentBodyDelimiter: "コメント本文に単独の '---' 区切り行を含めることはできません。",
+		commentAuthorDelimiter: "コメントの投稿者に単独の '---' 区切り行を含めることはできません。",
+	},
+	demotion: {
+		refreshFailed:
+			"タスクは下書きに移動されましたが、表示の更新に失敗しました。このダイアログを閉じ、再試行する前に下書きを確認してください。",
+		cleanupFailed:
+			"タスクは下書きに移動されましたが、依存するタスクからの参照の削除に失敗しました。一部のタスクがまだ参照している可能性があります。表示は更新されたので、再試行する前にそれらのタスクを確認してください。",
+		commitFailed:
+			"タスクは下書きに移動されましたが、Git コミットの記録に失敗しました。表示は更新されたので、再試行する前に下書きを確認してください。",
+		laterStepFailed:
+			"タスクは下書きに移動されましたが、後続の処理に失敗しました。表示は更新されたので、再試行する前に下書きと依存するタスクを確認してください。",
+		filesystemFailed:
+			"下書きへの移動中にファイルシステムのエラーが発生し、タスクと下書きの両方が残っている可能性があります。表示は更新されたので、再試行する前に確認してください。",
+		responseLost:
+			"下書きへの移動リクエストは成功した可能性がありますが、応答を受け取れませんでした。再試行する前にタスクと下書きの画面を確認してください。",
+	},
+	readOnly: {
+		label: "読み取り専用:",
+		branchBefore: "このタスクは ",
+		branchAfter: " ブランチにあります。編集するにはそのブランチに切り替えてください。",
+		archived: "このタスクはアーカイブ済みです。",
+	},
+	hierarchy: {
+		ariaLabel: "タスクの階層",
+		parent: "親タスク",
+		openParent: (id: string, title: string, status: string) => `親タスク ${id} を開く: ${title}（${status}）`,
+		openSubtask: (id: string, title: string, status: string) => `サブタスク ${id} を開く: ${title}（${status}）`,
+		progress: (completed: number, total: number) => `${total} 件中 ${completed} 件完了`,
+	},
+	sections: {
+		title: "タイトル",
+		description: "説明",
+		subtasks: "サブタスク",
+		references: "参照",
+		modifiedFiles: "変更ファイル",
+		documentation: "ドキュメント",
+		acceptanceCriteria: "受け入れ基準",
+		definitionOfDone: "完了の定義",
+		dependencyGraph: "依存関係グラフ",
+		implementationPlan: "実装計画",
+		implementationNotes: "実装メモ",
+		comments: "コメント",
+		finalSummary: "最終サマリー",
+		completionSummary: "完了時のまとめ",
+		due: "期限",
+		status: "ステータス",
+		type: "種類",
+		assignee: "担当者",
+		labels: "ラベル",
+		priority: "優先度",
+		project: "プロジェクト",
+		milestone: "マイルストーン",
+		dependencies: "依存関係",
+	},
+	empty: {
+		description: "説明はありません",
+		references: "参照はありません",
+		modifiedFiles: "変更ファイルはありません",
+		acceptanceCriteria: "受け入れ基準はありません",
+		definitionOfDone: "完了の定義の項目はありません",
+		plan: "計画はありません",
+		notes: "メモはありません",
+		comments: "コメントはありません",
+	},
+	placeholders: {
+		title: "タスクのタイトルを入力",
+		reference: "URL またはファイルパス...",
+		modifiedFile: "プロジェクトルートからのパス...",
+		commentAuthor: "投稿者",
+		commentBody: "コメントを追加...",
+		finalSummary: "実装内容の PR 形式のまとめ（タスク完了時に記入）",
+		assignee: "名前を入力して Enter",
+		labels: "ラベルを入力して Enter またはカンマ",
+	},
+	removeReference: "参照を削除",
+	removeModifiedFile: "変更ファイルを削除",
+	toggleToUpdate: "チェックで更新",
+	addingComment: "追加中...",
+	addComment: "コメントを追加",
+	dates: {
+		created: "作成:",
+		updated: "更新:",
+		due: "期限:",
+	},
+	typeSelect: {
+		ariaLabel: "タスクの種類",
+		none: "種類なし",
+	},
+	notConfigured: (value: string) => `${value}（未設定）`,
+	noPriority: "優先度なし",
+	projectSelect: {
+		ariaLabel: "タスクのプロジェクト",
+		none: "プロジェクトなし",
+	},
+	noMilestone: "マイルストーンなし",
+	readyToStart: "着手可能",
+	archive: {
+		tooltip: "このタスクをボードから外してアーカイブに移動",
+		button: "タスクをアーカイブ",
+	},
+	acceptanceCriteriaEditor: {
+		newCriterionPlaceholder: "新しい基準",
+	},
+	acceptanceCriteriaProgress: {
+		ariaLabel: "受け入れ基準の進捗",
+		title: (checked: number, total: number) => `受け入れ基準 ${total} 件中 ${checked} 件チェック済み`,
+	},
+	dependencyInput: {
+		placeholderEmpty: "タスク ID またはタイトルを入力し、Enter またはカンマ",
+		placeholderMore: "依存関係をさらに追加...",
+		remove: (taskId: string) => `${taskId} を削除`,
+	},
+	dependencyGraph: {
+		dependsOn: "依存先",
+		dependents: "依存元",
+		unknownId: "不明な ID",
+		ambiguousId: "曖昧な ID",
+		completed: "完了",
+		cycle: "循環",
+		shownAbove: "上に表示済み",
+		open: (label: string) => `${label} を開く`,
+		sectionAriaLabel: (heading: string, count: number) => `${heading}（${count}）`,
+		summary: (direct: number, total: number) => `直接 ${direct} 件、合計 ${total} 件`,
+	},
+	chipInput: {
+		remove: (item: string) => `${item} を削除`,
+	},
+	taskTypeBadge: {
+		title: (type: string) => `タスクの種類: ${type}`,
+	},
+};

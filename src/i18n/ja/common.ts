@@ -1,0 +1,31 @@
+import type { CommonMessages } from "../en/common.ts";
+
+export const common: CommonMessages = {
+	add: "追加",
+	apply: "適用",
+	archive: "アーカイブ",
+	back: "戻る",
+	cancel: "キャンセル",
+	clear: "クリア",
+	close: "閉じる",
+	confirm: "確認",
+	create: "作成",
+	delete: "削除",
+	dismiss: "閉じる",
+	edit: "編集",
+	error: "エラー",
+	loading: "読み込み中...",
+	no: "いいえ",
+	none: "なし",
+	relativeDate: {
+		today: "今日",
+		yesterday: "昨日",
+		daysAgo: (days: number) => `${days}日前`,
+	},
+	remove: "削除",
+	retry: "再試行",
+	save: "保存",
+	saving: "保存中...",
+	search: "検索",
+	yes: "はい",
+};

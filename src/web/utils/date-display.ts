@@ -11,6 +11,20 @@ export type StoredDateDisplayOptions = {
 	 * tests pass it explicitly so results never depend on the machine's timezone.
 	 */
 	timeZone?: string;
+	/** Words for compact relative dates; defaults to English. */
+	relativeLabels?: RelativeDateLabels;
+};
+
+export type RelativeDateLabels = {
+	today: string;
+	yesterday: string;
+	daysAgo: (days: number) => string;
+};
+
+const ENGLISH_RELATIVE_LABELS: RelativeDateLabels = {
+	today: "today",
+	yesterday: "yesterday",
+	daysAgo: (days) => `${days}d ago`,
 };
 
 export type StoredDateDisplay = {
@@ -118,9 +132,10 @@ export function formatStoredDateForCompactDisplay(
 	const diffDays = todayLocal ? calendarDaysBetween(localDate, todayLocal) : null;
 
 	if (diffDays !== null && diffDays >= 0 && diffDays < 7) {
-		if (diffDays === 0) return { text: "today", title };
-		if (diffDays === 1) return { text: "yesterday", title };
-		return { text: `${diffDays}d ago`, title };
+		const labels = options.relativeLabels ?? ENGLISH_RELATIVE_LABELS;
+		if (diffDays === 0) return { text: labels.today, title };
+		if (diffDays === 1) return { text: labels.yesterday, title };
+		return { text: labels.daysAgo(diffDays), title };
 	}
 
 	// Absolute fallback stays compact: the date portion only, in the viewer's timezone.

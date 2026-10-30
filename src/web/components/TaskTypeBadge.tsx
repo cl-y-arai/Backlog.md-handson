@@ -1,4 +1,5 @@
 import type React from "react";
+import { useI18n } from "../contexts/LanguageContext";
 
 const TYPE_BADGE_PALETTES = [
 	"bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
@@ -69,6 +70,7 @@ interface TaskTypeBadgeProps {
 }
 
 const TaskTypeBadge: React.FC<TaskTypeBadgeProps> = ({ type, availableTypes, className = "" }) => {
+	const { t } = useI18n();
 	const label = type?.trim();
 	if (!label) {
 		return null;
@@ -77,7 +79,7 @@ const TaskTypeBadge: React.FC<TaskTypeBadgeProps> = ({ type, availableTypes, cla
 	return (
 		<span
 			data-task-type={label}
-			title={`Task type: ${label}`}
+			title={t.taskDetails.taskTypeBadge.title(label)}
 			className={`inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-4 ${TYPE_BADGE_PALETTES[getPaletteIndex(label, availableTypes)]} ${className}`}
 		>
 			<span className="truncate">{label}</span>

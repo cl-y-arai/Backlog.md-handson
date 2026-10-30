@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "../contexts/LanguageContext";
 
 interface BranchIndexingIndicatorProps {
 	message?: string | null;
@@ -19,6 +20,7 @@ export function BranchIndexingIndicator({
 	appearDelayMs = 250,
 	exitDurationMs = 200,
 }: BranchIndexingIndicatorProps) {
+	const { t } = useI18n();
 	const [mounted, setMounted] = useState(false);
 	const [active, setActive] = useState(false);
 	const lastMessageRef = useRef<string | null>(null);
@@ -58,9 +60,9 @@ export function BranchIndexingIndicator({
 					aria-hidden="true"
 				/>
 				<span aria-hidden="true" className="hidden sm:inline">
-					Indexing branches
+					{t.system.branchIndexing.indexing}
 				</span>
-				<span className="sr-only">{detail ?? "Indexing branches"}</span>
+				<span className="sr-only">{detail ?? t.system.branchIndexing.indexing}</span>
 			</div>
 			<div
 				aria-hidden="true"

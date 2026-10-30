@@ -1,0 +1,61 @@
+import type { SettingsMessages } from "../en/settings.ts";
+
+export const settings: SettingsMessages = {
+	title: "設定",
+	loading: "設定を読み込み中...",
+	loadFailed: "設定の読み込みに失敗しました",
+	saveFailed: "設定の保存に失敗しました",
+	saveChanges: "変更を保存",
+	savedSuccess: "設定を保存しました",
+	validation: {
+		projectNameRequired: "プロジェクト名は必須です",
+		portRange: "ポートは 1〜65535 の範囲で指定してください",
+	},
+	project: {
+		heading: "プロジェクト設定",
+		projectName: "プロジェクト名",
+		dateFormat: "日付形式",
+		dateFormatHelp: "Web UI と TUI での日付の表示形式です。Markdown ファイル内の日付は常に yyyy-mm-dd で保存されます。",
+	},
+	workflow: {
+		heading: "ワークフロー設定",
+		autoCommit: "自動コミット",
+		autoCommitHelp: "タスク操作後に変更を自動で Git にコミットします",
+		remoteOperations: "リモート操作",
+		remoteOperationsHelp: "リモートブランチからタスク情報を取得します",
+		defaultStatus: "デフォルトのステータス",
+		defaultStatusHelp: "新規タスクのデフォルトのステータス",
+		defaultEditor: "デフォルトのエディター",
+		defaultEditorPlaceholder: "例: vim, nano, code",
+		defaultEditorHelp: "タスクの編集に使うエディターコマンド（EDITOR 環境変数より優先されます）",
+	},
+	definitionOfDone: {
+		heading: "完了の定義（デフォルト）",
+		description: "これらのチェックリスト項目は新規タスクにデフォルトで追加されます。",
+		itemPlaceholder: "チェックリスト項目",
+		addItem: "+ 項目を追加",
+	},
+	webUi: {
+		heading: "Web UI 設定",
+		defaultPort: "デフォルトのポート",
+		autoOpenBrowser: "ブラウザーを自動で開く",
+		autoOpenBrowserHelp: "Web UI の起動時にブラウザーを自動で開きます",
+		hideEmptyColumns: "空の列を非表示",
+		hideEmptyColumnsHelp:
+			"タスクのないステータスのボード列を非表示にします。タスクをドラッグ中は列が再表示され、ドロップ先として使えます。",
+	},
+	advanced: {
+		heading: "詳細設定",
+		maxColumnWidth: "最大列幅",
+		maxColumnWidthHelp: "CLI 出力のテキスト列の最大幅",
+		taskResolutionStrategy: "タスク解決方針",
+		mostRecent: "最新のもの",
+		mostProgressed: "最も進んだもの",
+		taskResolutionStrategyHelp: "タスクが複数のブランチに存在する場合の競合の解決方法",
+		zeroPaddedIds: "ゼロ埋め ID",
+		zeroPaddedIdsHelp: "ID のゼロ埋め桁数（0 = 無効、3 = task-001、4 = task-0001）",
+		taskPrefix: "タスクのプレフィックス",
+		readOnly: "（読み取り専用）",
+		taskPrefixHelp: "初期化時に設定されます。既存のタスク ID を壊さないよう変更できません。",
+	},
+};

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { DuplicateRepairPlan } from "../../core/duplicate-task-repair";
+import { useI18n } from "../contexts/LanguageContext";
 import { DuplicateIdRepairModal } from "./DuplicateIdRepairModal";
 
 interface DuplicateIdWarningProps {
@@ -8,6 +9,7 @@ interface DuplicateIdWarningProps {
 }
 
 export function DuplicateIdWarning({ plan, onRepaired }: DuplicateIdWarningProps) {
+	const { t } = useI18n();
 	const [dismissed, setDismissed] = useState(false);
 	const [isRepairOpen, setIsRepairOpen] = useState(false);
 
@@ -31,7 +33,7 @@ export function DuplicateIdWarning({ plan, onRepaired }: DuplicateIdWarningProps
 							/>
 						</svg>
 						<p className="truncate text-sm">
-							<span className="font-semibold">Duplicate task IDs:</span> {plan.groups.length} {plan.groups.length === 1 ? "group" : "groups"} across {duplicateTaskCount} files. Some tasks may be hidden.
+							<span className="font-semibold">{t.system.duplicateIds.warningLabel}</span> {t.system.duplicateIds.warningSummary(plan.groups.length, duplicateTaskCount)}
 						</p>
 					</div>
 					<div className="ml-auto flex shrink-0 items-center gap-2">
@@ -40,13 +42,13 @@ export function DuplicateIdWarning({ plan, onRepaired }: DuplicateIdWarningProps
 							onClick={() => setIsRepairOpen(true)}
 							className="rounded-md bg-amber-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-amber-50 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
 						>
-							Review repair
+							{t.system.duplicateIds.reviewRepair}
 						</button>
 						<button
 							type="button"
 							onClick={() => setDismissed(true)}
 							className="inline-flex h-8 w-8 items-center justify-center rounded-md text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:text-amber-100 dark:hover:bg-amber-900"
-							aria-label="Dismiss duplicate task ID warning"
+							aria-label={t.system.duplicateIds.dismissWarning}
 						>
 							<span aria-hidden="true" className="text-xl leading-none">×</span>
 						</button>

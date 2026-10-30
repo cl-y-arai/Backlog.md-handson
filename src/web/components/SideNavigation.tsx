@@ -16,6 +16,7 @@ import { getWebVersion } from '../utils/version';
 import { apiClient } from '../lib/api';
 import { parseSearchCommandQuery } from '../utils/search-command-query';
 import { buildDocsTree, type DocsTreeNode } from '../lib/docs-tree';
+import { useI18n } from '../contexts/LanguageContext';
 
 // Utility functions for ID transformations
 const stripIdPrefix = (id: string): string => {
@@ -33,14 +34,17 @@ const hasTaskSearchFilters = (parsedQuery: ReturnType<typeof parseSearchCommandQ
 	);
 };
 
-const LoadingPhase = ({ className }: { className: string }) => (
-	<p className={className} role="status">
-		<span
-			className="inline-block h-3 w-32 animate-pulse rounded bg-gray-300 dark:bg-gray-700"
-			aria-label="Loading content"
-		/>
-	</p>
-);
+const LoadingPhase = ({ className }: { className: string }) => {
+	const { t } = useI18n();
+	return (
+		<p className={className} role="status">
+			<span
+				className="inline-block h-3 w-32 animate-pulse rounded bg-gray-300 dark:bg-gray-700"
+				aria-label={t.sideNavigation.loadingContent}
+			/>
+		</p>
+	);
+};
 
 const NavigationCount = ({
 	count,
@@ -53,15 +57,16 @@ const NavigationCount = ({
 	error?: Error | null;
 	label: string;
 }) => {
+	const { t } = useI18n();
 	if (isLoading) {
 		return (
 			<span
 				className="inline-block h-3 w-5 animate-pulse rounded bg-gray-300 align-middle dark:bg-gray-700"
-				aria-label={`Loading ${label} count`}
+				aria-label={t.sideNavigation.loadingCount(label)}
 			/>
 		);
 	}
-	return error ? <span aria-label={`${label} count unavailable`}>—</span> : count;
+	return error ? <span aria-label={t.sideNavigation.countUnavailable(label)}>—</span> : count;
 };
 
 // Icon components for better semantics and performance
@@ -217,13 +222,14 @@ interface FolderNodeProps {
 }
 
 const FolderNode = memo(function FolderNode({ node, depth, folderExpanded, onToggleFolder }: FolderNodeProps) {
+	const { t } = useI18n();
 	const isExpanded = folderExpanded[node.path] ?? true;
 
 	return (
 		<div>
 			<button
 				onClick={() => onToggleFolder(node.path)}
-				aria-label={`${node.name} folder`}
+				aria-label={t.sideNavigation.folder(node.name)}
 				aria-expanded={isExpanded}
 				title={node.name}
 				className="flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200 w-full"
@@ -271,6 +277,7 @@ const SideNavigation = memo(function SideNavigation({
 	error,
 	onRetry
 }: SideNavigationProps) {
+	const { t } = useI18n();
 	const [isCollapsed, setIsCollapsed] = useState(() => {
 		const saved = localStorage.getItem('sideNavCollapsed');
 		return saved ? JSON.parse(saved) : false;
@@ -278,7 +285,7 @@ const SideNavigation = memo(function SideNavigation({
 	const [searchQuery, setSearchQuery] = useState('');
 	const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 	const [isSearching, setIsSearching] = useState(false);
-	const [searchError, setSearchError] = useState<string | null>(null);
+	const [searchError, setSearchError] = useState(false);
 	const [searchInputRef, setSearchInputRef] = useState<HTMLInputElement | null>(null);
 	const focusSearchOnExpandRef = useRef(false);
 	const expandAndFocusSearch = useCallback(() => {
@@ -390,14 +397,14 @@ const SideNavigation = memo(function SideNavigation({
 		const query = searchQuery.trim();
 		if (query === '') {
 			setSearchResults([]);
-			setSearchError(null);
+			setSearchError(false);
 			setIsSearching(false);
 			return;
 		}
 
 		let cancelled = false;
 		setIsSearching(true);
-		setSearchError(null);
+		setSearchError(false);
 		const timeout = setTimeout(async () => {
 			try {
 				const parsedQuery = parseSearchCommandQuery(query);
@@ -411,7 +418,7 @@ const SideNavigation = memo(function SideNavigation({
 				console.error('Sidebar search failed:', err);
 				if (!cancelled) {
 					setSearchResults([]);
-					setSearchError('Search failed');
+					setSearchError(true);
 				}
 			} finally {
 				if (!cancelled) {
@@ -473,8 +480,8 @@ const SideNavigation = memo(function SideNavigation({
 				<button
 					onClick={toggleCollapse}
 					className="absolute -right-3 top-1/2 transform -translate-y-1/2 z-10 flex items-center justify-center w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-circle shadow-sm hover:shadow-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200"
-					aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-					title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+					aria-label={isCollapsed ? t.sideNavigation.expandSidebar : t.sideNavigation.collapseSidebar}
+					title={isCollapsed ? t.sideNavigation.expandSidebar : t.sideNavigation.collapseSidebar}
 				>
 					{isCollapsed ? <Icons.ChevronRight /> : <Icons.ChevronLeft />}
 				</button>
@@ -488,7 +495,7 @@ const SideNavigation = memo(function SideNavigation({
 							<input
 								ref={setSearchInputRef}
 								type="text"
-								placeholder="Search (⌘K)..."
+								placeholder={t.sideNavigation.searchPlaceholder}
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
 								className="w-full pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-stone-500 dark:focus:ring-stone-400 focus:border-transparent transition-colors duration-200"
@@ -510,7 +517,7 @@ const SideNavigation = memo(function SideNavigation({
 							<button
 								onClick={expandAndFocusSearch}
 								className="flex items-center justify-center p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
-								title="Search (⌘K)"
+								title={t.sideNavigation.searchTitle}
 							>
 								<Icons.Search />
 						</button>
@@ -522,9 +529,9 @@ const SideNavigation = memo(function SideNavigation({
 			{!isCollapsed && searchQuery.trim() && unifiedSearchResults.length > 0 && (
 				<div className="p-4 border-b border-gray-200 dark:border-gray-700">
 					<div className="flex items-center justify-between mb-3">
-						<h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Search Results</h3>
+						<h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{t.sideNavigation.searchResults}</h3>
 						{isSearching && (
-							<span className="text-xs text-gray-500 dark:text-gray-400">Searching…</span>
+							<span className="text-xs text-gray-500 dark:text-gray-400">{t.sideNavigation.searching}</span>
 						)}
 					</div>
 					<div className="space-y-1">
@@ -569,7 +576,7 @@ const SideNavigation = memo(function SideNavigation({
 											{item.title}
 										</div>
 										<div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-											{result.type.charAt(0).toUpperCase() + result.type.slice(1)} • {item.id}
+											{t.sideNavigation.resultTypes[result.type]} • {item.id}
 										</div>
 									</div>
 									{result.score !== null && (
@@ -586,13 +593,13 @@ const SideNavigation = memo(function SideNavigation({
 
 			{!isCollapsed && searchQuery.trim() && unifiedSearchResults.length === 0 && !isSearching && !searchError && (
 				<div className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-					No matching results
+					{t.sideNavigation.noMatchingResults}
 				</div>
 			)}
 
 			{!isCollapsed && searchQuery.trim() && searchError && (
 				<div className="px-4 py-2 text-sm text-red-600 dark:text-red-400 border-b border-gray-200 dark:border-gray-700">
-					{searchError}
+					{t.sideNavigation.searchFailed}
 				</div>
 			)}
 
@@ -605,24 +612,24 @@ const SideNavigation = memo(function SideNavigation({
 							type="button"
 							onClick={onRetry}
 							className="flex w-full items-center justify-center rounded-md bg-red-50 p-3 font-bold text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
-							aria-label="Failed to load navigation. Retry"
-							title="Failed to load navigation. Retry"
+							aria-label={t.sideNavigation.loadFailedRetry}
+							title={t.sideNavigation.loadFailedRetry}
 						>
 							<span aria-hidden="true">!</span>
-							<span className="sr-only">Retry</span>
+							<span className="sr-only">{t.common.retry}</span>
 						</button>
 					</div>
 				)}
 				{error && !isCollapsed && (
 					<div className="px-4 py-4">
 						<div className="text-center p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-							<p className="text-sm text-red-700 dark:text-red-400 mb-2">Failed to load navigation</p>
+							<p className="text-sm text-red-700 dark:text-red-400 mb-2">{t.sideNavigation.loadFailed}</p>
 								{onRetry && (
 									<button
 										onClick={onRetry}
 										className="text-xs px-3 py-1 bg-red-600 dark:bg-red-700 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors duration-200"
 									>
-										Retry
+										{t.common.retry}
 									</button>
 							)}
 						</div>
@@ -635,7 +642,7 @@ const SideNavigation = memo(function SideNavigation({
 						<div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300">
 							<span className="text-gray-500 dark:text-gray-400"><Icons.Tasks /></span>
 							<span className="text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 whitespace-nowrap">
-								Tasks (<NavigationCount count={taskCount} isLoading={isLoading} error={error} label="task" />)
+								{t.sideNavigation.tasksHeading} (<NavigationCount count={taskCount} isLoading={isLoading} error={error} label={t.sideNavigation.countLabels.task} />)
 							</span>
 						</div>
 						{isLoading && (
@@ -658,7 +665,7 @@ const SideNavigation = memo(function SideNavigation({
 							}
 						>
 							<Icons.Board />
-							<span className="ml-3 text-sm font-medium">Kanban Board</span>
+							<span className="ml-3 text-sm font-medium">{t.sideNavigation.kanbanBoard}</span>
 						</NavLink>
 
 						{/* Tasks Navigation */}
@@ -673,7 +680,7 @@ const SideNavigation = memo(function SideNavigation({
 							}
 						>
 							<Icons.List />
-							<span className="ml-3 text-sm font-medium">All Tasks</span>
+							<span className="ml-3 text-sm font-medium">{t.sideNavigation.allTasks}</span>
 						</NavLink>
 
 						{/* Milestones Navigation */}
@@ -688,7 +695,7 @@ const SideNavigation = memo(function SideNavigation({
 							}
 						>
 							<Icons.Milestone />
-							<span className="ml-3 text-sm font-medium">Milestones</span>
+							<span className="ml-3 text-sm font-medium">{t.sideNavigation.milestones}</span>
 						</NavLink>
 
 						{/* Drafts Navigation */}
@@ -703,7 +710,7 @@ const SideNavigation = memo(function SideNavigation({
 							}
 						>
 							<Icons.Draft />
-							<span className="ml-3 text-sm font-medium">Drafts</span>
+							<span className="ml-3 text-sm font-medium">{t.sideNavigation.drafts}</span>
 						</NavLink>
 
 						{/* Statistics Navigation */}
@@ -718,7 +725,7 @@ const SideNavigation = memo(function SideNavigation({
 							}
 						>
 							<Icons.Statistics />
-							<span className="ml-3 text-sm font-medium">Statistics</span>
+							<span className="ml-3 text-sm font-medium">{t.sideNavigation.statistics}</span>
 						</NavLink>
 					</div>
 				)}
@@ -735,19 +742,19 @@ const SideNavigation = memo(function SideNavigation({
 										<button
 											onClick={() => setIsDocsCollapsed(!isDocsCollapsed)}
 											className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors duration-200"
-											title={isDocsCollapsed ? "Expand documents" : "Collapse documents"}
+											title={isDocsCollapsed ? t.sideNavigation.expandDocuments : t.sideNavigation.collapseDocuments}
 										>
 											{isDocsCollapsed ? <Icons.ChevronRight /> : <Icons.ChevronDown />}
 									</button>
 									<span className="text-gray-500 dark:text-gray-400"><Icons.Document /></span>
 									<span className="text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 whitespace-nowrap">
-										Documents (<NavigationCount count={docs.length} isLoading={isLoading} error={error} label="document" />)
+										{t.sideNavigation.documentsHeading} (<NavigationCount count={docs.length} isLoading={isLoading} error={error} label={t.sideNavigation.countLabels.document} />)
 									</span>
 								</div>
 									<button
 										onClick={handleCreateDocument}
 										className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors duration-200"
-										title="Create new document"
+										title={t.sideNavigation.createDocument}
 									>
 										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -762,9 +769,9 @@ const SideNavigation = memo(function SideNavigation({
 									{isLoading ? (
 										<LoadingPhase className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400" />
 									) : error ? (
-										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">Documents unavailable</p>
+										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{t.sideNavigation.documentsUnavailable}</p>
 									) : filteredDocs.length === 0 ? (
-										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No documents</p>
+										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{t.sideNavigation.noDocuments}</p>
 									) : searchQuery.trim() ? (
 										// Search results stay flat, bypassing folder grouping
 										filteredDocs.map(doc => (
@@ -800,13 +807,13 @@ const SideNavigation = memo(function SideNavigation({
 										<button
 											onClick={() => setIsDecisionsCollapsed(!isDecisionsCollapsed)}
 											className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors duration-200"
-											title={isDecisionsCollapsed ? "Expand decisions" : "Collapse decisions"}
+											title={isDecisionsCollapsed ? t.sideNavigation.expandDecisions : t.sideNavigation.collapseDecisions}
 										>
 											{isDecisionsCollapsed ? <Icons.ChevronRight /> : <Icons.ChevronDown />}
 									</button>
 									<span className="text-gray-500 dark:text-gray-400"><Icons.Decision /></span>
 									<span className="text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 whitespace-nowrap">
-										Decisions (<NavigationCount count={decisions.length} isLoading={isLoading} error={error} label="decision" />)
+										{t.sideNavigation.decisionsHeading} (<NavigationCount count={decisions.length} isLoading={isLoading} error={error} label={t.sideNavigation.countLabels.decision} />)
 									</span>
 								</div>
 								{/* Temporarily hidden - decisions editing not ready */}
@@ -830,9 +837,9 @@ const SideNavigation = memo(function SideNavigation({
 									{isLoading ? (
 										<LoadingPhase className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400" />
 									) : error ? (
-										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">Decisions unavailable</p>
+										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{t.sideNavigation.decisionsUnavailable}</p>
 									) : filteredDecisions.length === 0 ? (
-										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No decisions</p>
+										<p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{t.sideNavigation.noDecisions}</p>
 									) : (
 										filteredDecisions.map((decision) => (
 											<NavLink
@@ -862,7 +869,7 @@ const SideNavigation = memo(function SideNavigation({
 						<NavLink
 							to="/board"
 							data-tooltip-id="sidebar-tooltip"
-							data-tooltip-content="Kanban Board"
+							data-tooltip-content={t.sideNavigation.kanbanBoard}
 							className={({ isActive }) =>
 								`flex items-center justify-center p-3 rounded-md transition-colors duration-200 ${
 									isActive
@@ -878,7 +885,7 @@ const SideNavigation = memo(function SideNavigation({
 						<NavLink
 							to="/tasks"
 							data-tooltip-id="sidebar-tooltip"
-							data-tooltip-content="All Tasks"
+							data-tooltip-content={t.sideNavigation.allTasks}
 							className={({ isActive }) =>
 								`flex items-center justify-center p-3 rounded-md transition-colors duration-200 ${
 									isActive
@@ -895,7 +902,7 @@ const SideNavigation = memo(function SideNavigation({
 						<NavLink
 							to="/drafts"
 							data-tooltip-id="sidebar-tooltip"
-							data-tooltip-content="Drafts"
+							data-tooltip-content={t.sideNavigation.drafts}
 							className={({ isActive }) =>
 								`flex items-center justify-center p-3 rounded-md transition-colors duration-200 ${
 									isActive
@@ -912,7 +919,7 @@ const SideNavigation = memo(function SideNavigation({
 						<NavLink
 							to="/milestones"
 							data-tooltip-id="sidebar-tooltip"
-							data-tooltip-content="Milestones"
+							data-tooltip-content={t.sideNavigation.milestones}
 							className={({ isActive }) =>
 								`flex items-center justify-center p-3 rounded-md transition-colors duration-200 ${
 									isActive
@@ -929,7 +936,7 @@ const SideNavigation = memo(function SideNavigation({
 						<NavLink
 							to="/statistics"
 							data-tooltip-id="sidebar-tooltip"
-							data-tooltip-content="Statistics"
+							data-tooltip-content={t.sideNavigation.statistics}
 							className={({ isActive }) =>
 								`flex items-center justify-center p-3 rounded-md transition-colors duration-200 ${
 									isActive
@@ -948,7 +955,7 @@ const SideNavigation = memo(function SideNavigation({
 								setIsDocsCollapsed(false);
 							}}
 								data-tooltip-id="sidebar-tooltip"
-								data-tooltip-content="Documentation"
+								data-tooltip-content={t.sideNavigation.documentation}
 								className={`flex items-center justify-center p-3 rounded-md transition-colors duration-200 w-full ${
 									location.pathname.startsWith('/documentation')
 										? 'bg-blue-50 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400'
@@ -965,7 +972,7 @@ const SideNavigation = memo(function SideNavigation({
 								setIsDecisionsCollapsed(false);
 							}}
 								data-tooltip-id="sidebar-tooltip"
-								data-tooltip-content="Decisions"
+								data-tooltip-content={t.sideNavigation.decisions}
 								className={`flex items-center justify-center p-3 rounded-md transition-colors duration-200 w-full ${
 									location.pathname.startsWith('/decisions')
 										? 'bg-blue-50 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400'
@@ -994,7 +1001,7 @@ const SideNavigation = memo(function SideNavigation({
 						}
 					>
 						<Icons.DocumentSettings />
-						<span className="ml-3 text-sm font-medium">Settings</span>
+						<span className="ml-3 text-sm font-medium">{t.sideNavigation.settings}</span>
 						{version && (
 							<span className="ml-auto text-xs text-gray-500 dark:text-gray-400">Backlog.md - v{version}</span>
 						)}
@@ -1003,7 +1010,7 @@ const SideNavigation = memo(function SideNavigation({
 					<NavLink
 						to="/settings"
 						data-tooltip-id="sidebar-tooltip"
-						data-tooltip-content="Settings"
+						data-tooltip-content={t.sideNavigation.settings}
 						className={({ isActive }) =>
 							`flex items-center justify-center p-3 rounded-md transition-colors duration-200 ${
 								isActive
