@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -21,6 +22,7 @@ const Modal: React.FC<ModalProps> = ({
 	actions,
 	initialFocusRef,
 }) => {
+	const { t } = useLanguage();
 	const dialogRef = useRef<HTMLDivElement | null>(null);
 	const onCloseRef = useRef(onClose);
 	const disableEscapeCloseRef = useRef(disableEscapeClose);
@@ -132,7 +134,7 @@ const Modal: React.FC<ModalProps> = ({
 							onClick={onClose}
 							disabled={disableEscapeClose}
 							className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded p-1 transition-colors duration-200 text-2xl leading-none w-8 h-8 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-							aria-label="Close modal"
+							aria-label={t("task.closeModal")}
 						>
 							×
 						</button>

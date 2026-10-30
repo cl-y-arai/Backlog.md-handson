@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface LabelFilterDropdownProps {
 	availableLabels: string[];
@@ -18,11 +19,16 @@ export default function LabelFilterDropdown({
 	onChange,
 	menuId,
 	className = "min-w-[200px]",
-	label = "Labels",
-	emptyLabel = "All",
-	noOptionsLabel = "No labels",
-	clearLabel = "Clear label filter",
+	label: labelProp,
+	emptyLabel: emptyLabelProp,
+	noOptionsLabel: noOptionsLabelProp,
+	clearLabel: clearLabelProp,
 }: LabelFilterDropdownProps) {
+	const { t } = useLanguage();
+	const label = labelProp ?? t("board.labels");
+	const emptyLabel = emptyLabelProp ?? t("board.all");
+	const noOptionsLabel = noOptionsLabelProp ?? t("board.noLabels");
+	const clearLabel = clearLabelProp ?? t("board.clearLabelFilter");
 	const [isOpen, setIsOpen] = useState(false);
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
 	const menuRef = useRef<HTMLDivElement | null>(null);
@@ -68,7 +74,7 @@ export default function LabelFilterDropdown({
 							? emptyLabel
 							: selectedLabels.length === 1
 								? selectedLabels[0]
-								: `${selectedLabels.length} selected`}
+								: t("board.selectedCount", { count: selectedLabels.length })}
 					</span>
 				</div>
 			</button>
