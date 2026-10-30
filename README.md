@@ -125,6 +125,40 @@ Everything is stored as human-readable Markdown in a project-local backlog folde
 > [!TIP]
 > **Want an architecture diagram of your repo, kept up to date automatically?** See the [Backlog.md + Groma.md integration](#groma-md) below.
 
+### クイックスタート（日本語）
+
+1. インストールします。
+
+```bash
+npm i -g backlog.md
+# または: bun add -g backlog.md
+# または: brew install backlog-md
+```
+
+2. タスクを管理したい Git リポジトリで初期化します。
+
+```bash
+backlog init "My Awesome Project"
+
+# Git を使わない個人用の計画なら
+backlog init "Personal Planning" --no-git
+```
+
+3. 初期化ウィザードで、AI ツールとの連携方法を選びます。
+   - **CLI instructions**（推奨）: エージェントに `backlog instructions overview` を実行させる短い指示ファイルを作ります。
+   - **MCP connector**: Claude Code、Codex、Gemini CLI、Kiro、Cursor の設定を自動で行います。
+   - **Skip**: AI 連携なしで、タスク管理ツールとしてだけ使います。
+
+4. タスクを作ってボードで確認します。
+
+```bash
+backlog task create "最初のタスク"
+backlog task list
+backlog board
+```
+
+タスクは `backlog/` フォルダに Markdown ファイルとして保存されます。インストールせずに試す場合は `npx backlog.md init "My Project"` を使います。
+
 ---
 
 ## Working with AI agents
