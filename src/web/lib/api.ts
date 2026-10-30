@@ -1,6 +1,7 @@
 import type { DuplicateRepairPlan, DuplicateRepairResult } from "../../core/duplicate-task-repair.ts";
 import type { TaskStatistics } from "../../core/statistics.ts";
 import type { TaskDetail } from "../../core/task-detail.ts";
+import type { Locale } from "../../i18n/index.ts";
 import type {
 	BacklogConfig,
 	Decision,
@@ -431,6 +432,14 @@ export class ApiClient {
 		const response = await fetch(`${API_BASE}/config`);
 		if (!response.ok) {
 			throw new Error("Failed to fetch config");
+		}
+		return response.json();
+	}
+
+	async fetchLocale(): Promise<{ locale: Locale }> {
+		const response = await fetch(`${API_BASE}/locale`);
+		if (!response.ok) {
+			throw new Error("Failed to fetch locale");
 		}
 		return response.json();
 	}

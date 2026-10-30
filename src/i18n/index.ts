@@ -13,8 +13,8 @@ export function resolveLocale(): Locale {
 	return raw === "ja" ? "ja" : "en";
 }
 
-export function t(key: keyof Messages, params?: Record<string, string>): string {
-	const template = catalogs[resolveLocale()][key];
+export function translate(locale: Locale, key: keyof Messages, params?: Record<string, string>): string {
+	const template = catalogs[locale][key];
 	if (!params) {
 		return template;
 	}
@@ -22,4 +22,8 @@ export function t(key: keyof Messages, params?: Record<string, string>): string 
 		(text, [name, value]) => text.replaceAll(`{${name}}`, value),
 		template,
 	);
+}
+
+export function t(key: keyof Messages, params?: Record<string, string>): string {
+	return translate(resolveLocale(), key, params);
 }
