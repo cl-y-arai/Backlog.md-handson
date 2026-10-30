@@ -1,4 +1,5 @@
 import type React from "react";
+import { useTranslation } from "../contexts/LanguageContext";
 import { formatStoredDateForCompactDisplay, formatStoredDateForDisplay } from "../utils/date-display";
 
 interface StoredDateProps {
@@ -14,8 +15,14 @@ interface StoredDateProps {
  * Every web surface showing a stored date goes through this, so no component converts on its own.
  */
 const StoredDate: React.FC<StoredDateProps> = ({ value, dateFormat, compact = false, className }) => {
+	const { t } = useTranslation();
+	const labels = {
+		today: t("app.date.today"),
+		yesterday: t("app.date.yesterday"),
+		daysAgo: (days: number) => t("app.date.daysAgo", { days }),
+	};
 	const { text, title } = compact
-		? formatStoredDateForCompactDisplay(value, { dateFormat })
+		? formatStoredDateForCompactDisplay(value, { dateFormat, labels })
 		: formatStoredDateForDisplay(value, { dateFormat });
 
 	return (

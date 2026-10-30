@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient, readMovedFailureState } from '../lib/api';
+import { useTranslation } from '../contexts/LanguageContext';
 
 /**
  * The Archive button of the document page and the decision page, and what it does. It extends the
@@ -14,13 +15,11 @@ import { apiClient, readMovedFailureState } from '../lib/api';
 /** What differs between the two pages: the noun, the list page, the CLI restore command and the route. */
 const ARCHIVABLE_PAGES = {
 	document: {
-		noun: 'document',
 		listPath: '/documentation',
 		restoreCommand: 'backlog doc restore',
 		archive: (id: string) => apiClient.archiveDoc(id),
 	},
 	decision: {
-		noun: 'decision',
 		listPath: '/decisions',
 		restoreCommand: 'backlog decision restore',
 		archive: (id: string) => apiClient.archiveDecision(id),
@@ -43,6 +42,7 @@ export function useRecordArchive(
 	onRefreshData: () => Promise<void>,
 ) {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const [isArchiving, setIsArchiving] = useState(false);
 	const route = useMemo(() => ({ identity: routeIdentity }), [routeIdentity]);
 	const currentRoute = useRef<typeof route | null>(route);
@@ -61,7 +61,10 @@ export function useRecordArchive(
 	const archive = useCallback(async () => {
 		if (!record || !route.identity || currentRoute.current !== route || requestRunning.current) return;
 		const page = ARCHIVABLE_PAGES[kind];
-		const question = `Archive "${record.title}"? It leaves the sidebar and search. Restore it from the CLI with: ${page.restoreCommand} ${record.id}`;
+		const question = t(kind === 'document' ? 'docs.archive.confirmDocument' : 'docs.archive.confirmDecision', {
+				title: record.title,
+				command: `${page.restoreCommand} ${record.id}`,
+			});
 		if (!window.confirm(question)) return;
 
 		requestRunning.current = true;
@@ -84,7 +87,7 @@ export function useRecordArchive(
 				try {
 					if (currentRoute.current === route) {
 						window.alert(
-							`The ${page.noun} was archived, but committing the change failed. Check the repository before retrying.`,
+							t(kind === 'document' ? 'docs.archive.commitFailedDocument' : 'docs.archive.commitFailedDecision'),
 						);
 					}
 				} catch {
@@ -97,7 +100,7 @@ export function useRecordArchive(
 			requestRunning.current = false;
 			setIsArchiving(false);
 		}
-	}, [kind, record, route, onRefreshData, navigate]);
+	}, [kind, record, route, onRefreshData, navigate, t]);
 
 	return {
 		archive,
@@ -109,6 +112,7 @@ export function useRecordArchive(
 
 /** The header button. It looks like the other header buttons, in the red of the task Archive button. */
 export function ArchiveButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+	const { t } = useTranslation();
 	return (
 		<button
 			type="button"
@@ -120,22 +124,24 @@ export function ArchiveButton({ onClick, disabled }: { onClick: () => void; disa
 			<svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
 			</svg>
-			Archive
+			{t('docs.archive')}
 		</button>
 	);
 }
 
 /** Shown in the header of an archived record, which the page shows read-only. */
 export function ArchivedLabel() {
+	const { t } = useTranslation();
 	return (
 		<span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700">
-			Archived
+			{t('docs.archived')}
 		</span>
 	);
 }
 
 /** The server's message when it refused the archive, under the header, until dismissed. */
 export function ArchiveRefusal({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+	const { t } = useTranslation();
 	return (
 		<div role="alert" className="max-w-4xl mx-auto px-8 pb-4">
 			<div className="flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3">
@@ -143,7 +149,7 @@ export function ArchiveRefusal({ message, onDismiss }: { message: string; onDism
 				<button
 					type="button"
 					onClick={onDismiss}
-					aria-label="Dismiss"
+					aria-label={t('docs.dismiss')}
 					className="text-red-700 hover:text-red-900 dark:text-red-200 dark:hover:text-red-100 focus:outline-none focus:ring-2 focus:ring-red-400 rounded"
 				>
 					<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

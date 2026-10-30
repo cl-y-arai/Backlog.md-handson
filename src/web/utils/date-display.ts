@@ -6,6 +6,8 @@ const DATE_TIME_REGEX = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/;
 
 export type StoredDateDisplayOptions = {
 	dateFormat?: string;
+	/** Relative-date wording for compact display; defaults to English. */
+	labels?: { today: string; yesterday: string; daysAgo: (days: number) => string };
 	/**
 	 * IANA timezone used to render the local value. Defaults to the runtime timezone;
 	 * tests pass it explicitly so results never depend on the machine's timezone.
@@ -118,9 +120,9 @@ export function formatStoredDateForCompactDisplay(
 	const diffDays = todayLocal ? calendarDaysBetween(localDate, todayLocal) : null;
 
 	if (diffDays !== null && diffDays >= 0 && diffDays < 7) {
-		if (diffDays === 0) return { text: "today", title };
-		if (diffDays === 1) return { text: "yesterday", title };
-		return { text: `${diffDays}d ago`, title };
+		if (diffDays === 0) return { text: options.labels?.today ?? "today", title };
+		if (diffDays === 1) return { text: options.labels?.yesterday ?? "yesterday", title };
+		return { text: options.labels?.daysAgo(diffDays) ?? `${diffDays}d ago`, title };
 	}
 
 	// Absolute fallback stays compact: the date portion only, in the viewer's timezone.
