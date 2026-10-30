@@ -17,6 +17,8 @@
 <code>npm i -g backlog.md</code>
 </p>
 
+<p align="center">🇯🇵 <a href="#quickstart-ja">日本語クイックスタート</a></p>
+
 ![Backlog demo GIF using: backlog board](./.github/backlog-v1.40.gif)
 
 
@@ -72,6 +74,8 @@ Backlog.md itself. The full task ledger lives in this repo's [backlog folder](ba
 
 
 ---
+
+<a id="getting-started-en"></a>
 
 ## <img src="./.github/5-minute-tour-256.png" alt="Getting started" width="28" height="28" align="center"> Getting started
 
@@ -186,6 +190,75 @@ You can switch between AI-assisted and manual workflows at any time; both operat
 Read commands support stable, versioned JSON for scripts and integrations. Use `--json` with `task list`, `task view`, the `task <id>` shorthand, `draft list`, `decision list`, and `search`. JSON mode is noninteractive and keeps successful stdout machine-readable. Add `--watch` to `task list --json` for an initial full list followed by changed full replacements, using the exact same JSON format. Read successive complete JSON values; each response replaces the previous list.
 
 **Learn more:** [CLI reference](CLI-INSTRUCTIONS.md) | [Advanced configuration](ADVANCED-CONFIG.md)
+
+---
+
+<a id="quickstart-ja"></a>
+
+## 🇯🇵 日本語クイックスタート
+
+Backlog.md は、Git リポジトリ内の Markdown ファイルでタスクを管理する CLI ツールです。英語版は [Getting started](#getting-started-en) を参照してください。
+
+### インストールと初期化
+
+```bash
+# インストール
+npm i -g backlog.md
+# または: bun add -g backlog.md
+# または: brew install backlog-md
+# または: nix run github:MrLesk/Backlog.md
+
+# Git リポジトリで初期化する
+backlog init "My Awesome Project"
+
+# Git を使わないプロジェクト（個人の計画など）で初期化する
+backlog init "Personal Planning" --no-git
+```
+
+> [!TIP]
+> **インストールせずに試すには**、パッケージ名を指定して `npx backlog.md init "My Project"`、`npx backlog.md board` のように実行します。
+
+`backlog init` のウィザードでは、AI ツールとの連携方法を選びます。
+
+- **CLI instructions**（推奨）: エージェントに `backlog instructions overview` を実行させる短い指示ファイルを作成します
+- **MCP connector**: Claude Code、Codex、Gemini CLI、Kiro、Cursor の MCP 設定を自動で追加します
+- **Skip**: AI 連携を設定せず、タスク管理ツールとしてだけ使います
+
+タスクは `backlog/` などのプロジェクト内ディレクトリに、人が読める Markdown ファイルとして保存されます。タスク ID の接頭辞は `backlog init --task-prefix` で変更でき、既定では `TASK-1` のような ID になります。
+
+### タスクを作成・管理する
+
+```bash
+# タスクを作成し、説明と受け入れ基準を追加する
+backlog task create "Render markdown as kanban"
+backlog task edit TASK-1 -d "Detailed context" --ac "Clear acceptance criteria"
+
+# タスクを一覧表示・検索する
+backlog task list -s "To Do"
+backlog task view TASK-1
+backlog search "kanban"
+
+# ターミナルにカンバンボードを表示する
+backlog board
+
+# ブラウザでカンバンボードを開く（既定で 127.0.0.1 のみで待ち受けます）
+backlog browser
+backlog browser --port 8080   # ポートを指定する
+backlog browser --no-open     # ブラウザを自動で開かない
+```
+
+タスクファイルは手で編集せず、Backlog.md のコマンド（CLI / MCP / Web UI）を使ってください。項目の形式やメタデータの整合性が保たれます。
+
+### AI エージェントと使う
+
+Claude Code、Codex、Gemini CLI、Kiro などのエージェントには、`backlog init` の後にまず `backlog instructions overview` を実行させます。そのうえで、次の流れで進めます。
+
+1. **アイデアを伝える**: 作りたいものを伝え、説明と受け入れ基準つきの小さなタスクに分割してもらいます。タスクの説明と受け入れ基準を確認します（レビュー 1）
+2. **1 回に 1 タスク**: 1 つのセッションで 1 つのタスクに取り組み、1 タスクにつき 1 つの PR にします
+3. **実装前に計画を書かせる**: 実装の直前にコードベースを調べさせ、実装計画をタスクに書かせます。計画を確認し、承認するか修正を依頼します（レビュー 2）
+4. **実装して検証する**: 実装させた後、コード・テスト・lint を確認します（レビュー 3）
+
+詳しくは英語版の [Working with AI agents](#working-with-ai-agents)、[CLI reference](CLI-INSTRUCTIONS.md)、[Advanced configuration](ADVANCED-CONFIG.md) を参照してください。
 
 ---
 
