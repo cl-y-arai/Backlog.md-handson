@@ -43,6 +43,7 @@ import {
 	taskViewJson,
 } from "./formatters/json-output.ts";
 import { formatTaskPlainText } from "./formatters/task-plain-text.ts";
+import { t } from "./i18n/index.ts";
 import {
 	type AgentInstructionFile,
 	addAgentInstructions,
@@ -1061,7 +1062,7 @@ if (shouldRunMigration) {
 const program = new Command();
 program
 	.name("backlog")
-	.description("Backlog.md - Project management CLI")
+	.description(t("cli.rootDescription"))
 	.version(version, "-v, --version", "display version number")
 	.showSuggestionAfterError()
 	.showHelpAfterError("Run with --help to see accepted fields and examples.");
@@ -2610,13 +2611,13 @@ function printTaskSections(tasks: Task[], sortField: string | undefined, statuse
 	// Use the stdout stream, as JSON output does, so pending pipe writes keep the CLI alive.
 	for (const section of sectionTasks(tasks, sortField, statuses)) {
 		if (section.status === null) {
-			process.stdout.write("Tasks (sorted by priority):\n");
+			process.stdout.write(`${t("taskList.sortedByPriorityHeading")}\n`);
 			for (const task of section.tasks) {
 				process.stdout.write(`${formatPlainTaskListRow(task, { includeStatus: true })}\n`);
 			}
 			continue;
 		}
-		process.stdout.write(`${section.status || "No Status"}:\n`);
+		process.stdout.write(`${section.status || t("taskList.noStatusLabel")}:\n`);
 		for (const task of section.tasks) {
 			process.stdout.write(`${formatPlainTaskListRow(task)}\n`);
 		}
@@ -2799,9 +2800,9 @@ async function runTaskList(
 		printListWindow(displayTasks, listWindow, (windowTasks) => {
 			if (windowTasks.length === 0) {
 				if (resolvedParentId) {
-					process.stdout.write(`No child tasks found for parent task ${parentDisplayId}.\n`);
+					process.stdout.write(`${t("taskList.noChildTasksFound", { parentId: parentDisplayId ?? "" })}\n`);
 				} else {
-					process.stdout.write("No tasks found.\n");
+					process.stdout.write(`${t("taskList.noTasksFound")}\n`);
 				}
 				return;
 			}
@@ -3004,7 +3005,7 @@ const taskListCommand = addHelpSchema(taskCmd.command("list"), {
 		'backlog task list --status "<todo status>" --count',
 	],
 })
-	.description("list tasks grouped by status")
+	.description(t("taskList.description"))
 	.option(
 		"-s, --status <status>",
 		"filter tasks by status (case-insensitive, repeatable or comma-separated)",

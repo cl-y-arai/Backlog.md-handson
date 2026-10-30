@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { apiClient } from "../lib/api";
+import { useLocale } from "../contexts/LocaleContext";
 import type {
 	Milestone,
 	Task,
@@ -133,6 +134,7 @@ const TaskList: React.FC<TaskListProps> = ({
 	dateFormat,
 	isLoading = false,
 }) => {
+	const { t } = useLocale();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const statusOptions = useMemo(
 		() => (availableStatuses.length > 0 ? availableStatuses : [...DEFAULT_STATUSES]),
@@ -730,7 +732,7 @@ const TaskList: React.FC<TaskListProps> = ({
 		<div className="page-shell transition-colors duration-200">
 			<div className="flex flex-col gap-4 mb-6">
 				<div className="flex items-center justify-between gap-3">
-						<h1 className="text-2xl font-bold text-gray-900 dark:text-white">All Tasks</h1>
+						<h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("web.nav.allTasks")}</h1>
 						<button
 							className="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 dark:focus:ring-offset-gray-900 transition-colors duration-200"
 							onClick={onNewTask}
