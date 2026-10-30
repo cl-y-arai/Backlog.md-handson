@@ -14,6 +14,7 @@ import { BoardLoadingSkeleton } from './BoardLoadingSkeleton';
 import CleanupModal from './CleanupModal';
 import LabelFilterDropdown from './LabelFilterDropdown';
 import { SuccessToast } from './SuccessToast';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface BoardProps {
   onEditTask: (task: Task) => void;
@@ -81,6 +82,7 @@ const Board: React.FC<BoardProps> = ({
   hideEmptyColumns = false,
   dateFormat,
 }) => {
+  const { t } = useLanguage();
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null);
@@ -664,7 +666,7 @@ const Board: React.FC<BoardProps> = ({
       )}
       <div className="mb-6 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200">Kanban Board</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200">{t.board.title}</h2>
           <button
             className="inline-flex items-center px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 dark:focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
             onClick={onNewTask}
@@ -815,7 +817,7 @@ const Board: React.FC<BoardProps> = ({
 
       {loadError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-6 py-10 text-center dark:border-red-800 dark:bg-red-900/20" role="alert">
-          <p className="font-medium text-red-700 dark:text-red-300">Failed to load tasks</p>
+          <p className="font-medium text-red-700 dark:text-red-300">{t.board.failedToLoad}</p>
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">{loadError.message}</p>
           {onRefreshData && (
             <button
