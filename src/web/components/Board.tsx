@@ -14,6 +14,7 @@ import { BoardLoadingSkeleton } from './BoardLoadingSkeleton';
 import CleanupModal from './CleanupModal';
 import LabelFilterDropdown from './LabelFilterDropdown';
 import { SuccessToast } from './SuccessToast';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface BoardProps {
   onEditTask: (task: Task) => void;
@@ -81,6 +82,7 @@ const Board: React.FC<BoardProps> = ({
   hideEmptyColumns = false,
   dateFormat,
 }) => {
+  const { t } = useLanguage();
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null);
@@ -98,8 +100,8 @@ const Board: React.FC<BoardProps> = ({
   const [collapsedLanes, setCollapsedLanes] = useState<Record<string, boolean>>({});
   const terminalStatus = getTerminalStatus(statuses);
   const priorityOptions = useMemo(
-    () => [{ label: 'All priorities', value: '' }, ...getPriorityOptions(availablePriorities)],
-    [availablePriorities]
+    () => [{ label: t('board.allPriorities'), value: '' }, ...getPriorityOptions(availablePriorities)],
+    [availablePriorities, t]
   );
   const typeOptions = useMemo(() => getTaskTypeValues(availableTypes), [availableTypes]);
   const projectOptions = useMemo(() => getProjectValues(availableProjects), [availableProjects]);
@@ -392,7 +394,7 @@ const Board: React.FC<BoardProps> = ({
       });
       setUpdateError(
         result.failures.length > 0
-          ? `Could not move ${result.failures.length} of ${taskIds.length} tasks. ${result.failures
+          ? `${t('board.moveFailures', { failed: result.failures.length, total: taskIds.length })} ${result.failures
               .map((failure) => `${failure.taskId}: ${failure.reason}`)
               .join(' ')}`
           : null
@@ -404,7 +406,7 @@ const Board: React.FC<BoardProps> = ({
         onTasksUpdated(movedTasks, requestTask);
       } else if (onRefreshData) await onRefreshData();
     } catch (err) {
-      setUpdateError(err instanceof Error ? err.message : 'Failed to move tasks');
+      setUpdateError(err instanceof Error ? err.message : t('board.failedToMoveTasks'));
     }
   };
 
@@ -417,7 +419,7 @@ const Board: React.FC<BoardProps> = ({
       }
       setUpdateError(null);
     } catch (err) {
-      setUpdateError(err instanceof Error ? err.message : 'Failed to update task');
+      setUpdateError(err instanceof Error ? err.message : t('board.failedToUpdateTask'));
     }
   };
 
@@ -431,7 +433,7 @@ const Board: React.FC<BoardProps> = ({
       } else if (onRefreshData) await onRefreshData();
       setUpdateError(null);
     } catch (err) {
-      setUpdateError(err instanceof Error ? err.message : 'Failed to reorder task');
+      setUpdateError(err instanceof Error ? err.message : t('board.failedToReorderTask'));
     }
   };
 
@@ -600,7 +602,7 @@ const Board: React.FC<BoardProps> = ({
 
   const getLaneLabel = (lane: typeof lanes[0]): string => {
     if (lane.isNoMilestone || !lane.milestone) {
-      return 'Unassigned';
+      return t('board.unassigned');
     }
     return lane.label;
   };
@@ -664,25 +666,25 @@ const Board: React.FC<BoardProps> = ({
       )}
       <div className="mb-6 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200">Kanban Board</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200">{t('board.title')}</h2>
           <button
             className="inline-flex items-center px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 dark:focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
             onClick={onNewTask}
           >
-            + New Task
+            {t('board.newTask')}
           </button>
         </div>
         {selectedTaskIds.length > 0 && (
           <div
             className="flex flex-wrap items-center gap-3 rounded-lg border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 transition-colors duration-200"
             role="toolbar"
-            aria-label="Task selection"
+            aria-label={t('board.taskSelection')}
           >
             <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              {selectedTaskIds.length} selected
+              {t('board.selectedCount', { count: selectedTaskIds.length })}
             </span>
             <label className="sr-only" htmlFor="batch-move-status">
-              Move selected tasks to
+              {t('board.moveSelectedTasksTo')}
             </label>
             <select
               id="batch-move-status"
@@ -690,7 +692,7 @@ const Board: React.FC<BoardProps> = ({
               value={batchMoveStatus}
               onChange={(event) => setBatchMoveStatus(event.target.value)}
             >
-              <option value="">Move to...</option>
+              <option value="">{t('board.moveTo')}</option>
               {statuses.map((status) => (
                 <option key={status} value={status}>
                   {status}
@@ -703,14 +705,14 @@ const Board: React.FC<BoardProps> = ({
               disabled={!batchMoveStatus}
               onClick={() => handleBatchMove(batchMoveStatus)}
             >
-              Move
+              {t('board.move')}
             </button>
             <button type="button" className={BOARD_FILTER_BUTTON_CLASS} onClick={clearSelection}>
-              Clear
+              {t('board.clear')}
             </button>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-3" role="toolbar" aria-label="Board view controls">
+        <div className="flex flex-wrap items-center gap-3" role="toolbar" aria-label={t('board.viewControls')}>
             <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-1 bg-gray-50 dark:bg-gray-800/50 transition-colors duration-200">
               <button
                 type="button"
@@ -721,13 +723,13 @@ const Board: React.FC<BoardProps> = ({
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
-                All Tasks
+                {t('board.allTasks')}
               </button>
               <button
                 type="button"
                 onClick={() => onLaneChange('milestone')}
                 disabled={!hasTasksWithMilestones}
-                title={!hasTasksWithMilestones ? 'No tasks have milestones. Assign milestones to tasks first.' : 'Group tasks by milestone'}
+                title={!hasTasksWithMilestones ? t('board.noTasksHaveMilestones') : t('board.groupByMilestone')}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
                   !hasTasksWithMilestones
                     ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
@@ -736,19 +738,19 @@ const Board: React.FC<BoardProps> = ({
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
-                Milestone
+                {t('board.milestone')}
               </button>
             </div>
             {onFiltersChange && (
-              <div className="flex flex-wrap items-center gap-3" aria-label="Board filters">
+              <div className="flex flex-wrap items-center gap-3" aria-label={t('board.filters')}>
                 <select
-                  aria-label="Filter board by assignee"
+                  aria-label={t('board.filterByAssignee')}
                   value={filterAssignee}
                   onChange={e => onFiltersChange({ assignee: e.target.value, labels: normalizedFilterLabels, priority: filterPriority, taskType: filterType, project: filterProject })}
                   className={BOARD_FILTER_SELECT_CLASS}
                 >
-                  <option value="">All assignees</option>
-                  <option value="__unassigned__">Unassigned</option>
+                  <option value="">{t('board.allAssignees')}</option>
+                  <option value="__unassigned__">{t('board.unassigned')}</option>
                   {uniqueAssignees.map(a => (
                     <option key={a} value={a}>{a}</option>
                   ))}
@@ -763,12 +765,12 @@ const Board: React.FC<BoardProps> = ({
                 />
 
                 <select
-                  aria-label="Filter board by type"
+                  aria-label={t('board.filterByType')}
                   value={filterType}
                   onChange={e => onFiltersChange({ assignee: filterAssignee, labels: normalizedFilterLabels, priority: filterPriority, taskType: e.target.value, project: filterProject })}
                   className={BOARD_FILTER_SELECT_CLASS}
                 >
-                  <option value="">All types</option>
+                  <option value="">{t('board.allTypes')}</option>
                   {typeOptions.map(type => (
                     <option key={type} value={type}>{type}</option>
                   ))}
@@ -776,12 +778,12 @@ const Board: React.FC<BoardProps> = ({
 
                 {projectOptions.length > 0 && (
                   <select
-                    aria-label="Filter board by project"
+                    aria-label={t('board.filterByProject')}
                     value={filterProject}
                     onChange={e => onFiltersChange({ assignee: filterAssignee, labels: normalizedFilterLabels, priority: filterPriority, taskType: filterType, project: e.target.value })}
                     className={BOARD_FILTER_SELECT_CLASS}
                   >
-                    <option value="">All projects</option>
+                    <option value="">{t('board.allProjects')}</option>
                     {projectOptions.map(project => (
                       <option key={project} value={project}>{project}</option>
                     ))}
@@ -789,7 +791,7 @@ const Board: React.FC<BoardProps> = ({
                 )}
 
                 <select
-                  aria-label="Filter board by priority"
+                  aria-label={t('board.filterByPriority')}
                   value={filterPriority}
                   onChange={e => onFiltersChange({ assignee: filterAssignee, labels: normalizedFilterLabels, priority: e.target.value, taskType: filterType, project: filterProject })}
                   className={BOARD_FILTER_SELECT_CLASS}
@@ -805,7 +807,7 @@ const Board: React.FC<BoardProps> = ({
                     onClick={() => onFiltersChange({ assignee: '', labels: [], priority: '', taskType: '', project: '' })}
                     className={BOARD_FILTER_BUTTON_CLASS}
                   >
-                    Clear filters
+                    {t('board.clearFilters')}
                   </button>
                 )}
               </div>
@@ -815,7 +817,7 @@ const Board: React.FC<BoardProps> = ({
 
       {loadError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-6 py-10 text-center dark:border-red-800 dark:bg-red-900/20" role="alert">
-          <p className="font-medium text-red-700 dark:text-red-300">Failed to load tasks</p>
+          <p className="font-medium text-red-700 dark:text-red-300">{t('board.failedToLoadTasks')}</p>
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">{loadError.message}</p>
           {onRefreshData && (
             <button
@@ -823,7 +825,7 @@ const Board: React.FC<BoardProps> = ({
               onClick={() => void onRefreshData()}
               className="mt-4 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
             >
-              Retry
+              {t('common.retry')}
             </button>
           )}
         </div>

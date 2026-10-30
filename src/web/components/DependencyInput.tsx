@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, type KeyboardEvent } from 
 import { Link, useLocation } from 'react-router-dom';
 import { type Task } from '../../types';
 import { buildTaskIdIndex, resolveTaskReference } from '../utils/task-id-links';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const CHIP_LABEL_CLASS = 'truncate max-w-[16rem] sm:max-w-[20rem] md:max-w-[24rem]';
 
@@ -52,7 +53,9 @@ interface DependencyInputProps {
   disabled?: boolean;
 }
 
-const DependencyInput: React.FC<DependencyInputProps> = ({ value, onChange, availableTasks, suggestableTasks, currentTaskId, label = 'Dependencies', disabled }) => {
+const DependencyInput: React.FC<DependencyInputProps> = ({ value, onChange, availableTasks, suggestableTasks, currentTaskId, label: labelProp, disabled }) => {
+  const { t } = useLanguage();
+  const label = labelProp ?? t('task.dependencies');
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<Task[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -172,7 +175,7 @@ const DependencyInput: React.FC<DependencyInputProps> = ({ value, onChange, avai
 	                      type="button"
 	                      onClick={() => removeDependency(index)}
 	                      className="hover:bg-blue-200 dark:hover:bg-blue-800 rounded-sm p-0.5 transition-colors duration-200"
-	                      aria-label={`Remove ${taskId}`}
+	                      aria-label={t('task.removeItem', { item: taskId })}
 	                    >
 	                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -196,7 +199,7 @@ const DependencyInput: React.FC<DependencyInputProps> = ({ value, onChange, avai
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={value.length === 0 ? "Type task ID or title, then press Enter or comma" : "Add more dependencies..."}
+            placeholder={value.length === 0 ? t('task.dependencyPlaceholderEmpty') : t('task.dependencyPlaceholderMore')}
             className="w-full outline-none text-sm bg-transparent resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             rows={1}
             disabled={disabled}
