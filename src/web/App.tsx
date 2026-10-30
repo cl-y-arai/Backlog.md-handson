@@ -32,6 +32,7 @@ import type { TaskDetail } from '../core/task-detail';
 import type { DuplicateRepairPlan } from '../core/duplicate-task-repair';
 import { isValidTaskId } from '../utils/task-id';
 import { useHealthCheckContext } from './contexts/HealthCheckContext';
+import { useTranslation } from './contexts/LanguageContext';
 import { getWebVersion } from './utils/version';
 import { collectArchivedMilestoneKeys, collectMilestoneIds, milestoneKey } from './utils/milestones';
 import { getProjectValues } from '../utils/project-config';
@@ -208,6 +209,9 @@ type TaskModalState =
     };
 
 function AppContent() {
+  const { t } = useTranslation();
+  const tRef = useRef(t);
+  tRef.current = t;
   const [modal, setModal] = useState<TaskModalState>({ kind: 'closed' });
   // Each entry into the modal takes the next session number, so a response can name the modal it
   // was read for.
@@ -456,7 +460,7 @@ function AppContent() {
     } catch (error) {
       if (loadAllDataRequestRef.current === requestId) {
         console.error('Failed to load data:', error);
-        applyLoadError(error instanceof Error ? error : new Error('Failed to load data'));
+        applyLoadError(error instanceof Error ? error : new Error(tRef.current('app.loadFailed')));
       }
     } finally {
       if (loadAllDataRequestRef.current === requestId) {
@@ -484,9 +488,9 @@ function AppContent() {
   // Update document title when project name changes
   React.useEffect(() => {
     if (projectName) {
-      document.title = `${projectName} - Task Management`;
+      document.title = t('app.documentTitle', { project: projectName });
     }
-  }, [projectName]);
+  }, [projectName, t]);
 
   // Mark that we've been running after initial load
   useEffect(() => {
@@ -742,18 +746,18 @@ function AppContent() {
       if (!fromRoute || !routeBasePath) return;
       const message =
         error instanceof ApiError && error.status === 409
-          ? `Task "${taskId}" is ambiguous. Repair duplicate task IDs before opening this link.`
+          ? t('app.taskRoute.ambiguous', { id: taskId })
           : error instanceof ApiError && error.status === 400
-            ? `"${taskId}" is not a valid task ID.`
+            ? t('app.taskRoute.invalidId', { id: taskId })
             : error instanceof ApiError && error.status === 404
-              ? `Task "${taskId}" was not found.`
-              : `Task "${taskId}" could not be opened. Try again.`;
+              ? t('app.taskRoute.notFound', { id: taskId })
+              : t('app.taskRoute.couldNotOpen', { id: taskId });
       navigate(`${routeBasePath}${location.search}`, {
         replace: true,
         state: { taskRouteError: message } satisfies TaskRouteNavigationState,
       });
     },
-    [clearTaskModal, location.search, navigate, routeBasePath],
+    [clearTaskModal, location.search, navigate, routeBasePath, t],
   );
   const reportDetailReadFailureRef = useRef(reportDetailReadFailure);
   useEffect(() => {
@@ -900,7 +904,7 @@ function AppContent() {
       if (readMovedFailureState(error, 'archiveState')) {
         handleCloseModal();
         try {
-          window.alert('The task was archived, but committing the change failed. Check the repository before retrying.');
+          window.alert(t('app.archiveCommitFailed'));
         } catch {
           // A blocked dialog must not take the refresh down with it.
         }
@@ -918,7 +922,7 @@ function AppContent() {
       <ThemeProvider>
         <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900" role="status">
           <LoadingSpinner size="md" text="" />
-          <span className="sr-only">Loading</span>
+          <span className="sr-only">{t('app.loadingSr')}</span>
         </div>
       </ThemeProvider>
     );
@@ -1007,7 +1011,7 @@ function AppContent() {
                 <Navigate
                   to={{ pathname: '/board', search: location.search }}
                   replace
-                  state={{ taskRouteError: 'That task link is not valid.' } satisfies TaskRouteNavigationState}
+                  state={{ taskRouteError: t('app.taskRoute.invalidLink') } satisfies TaskRouteNavigationState}
                 />
               }
             />
@@ -1020,7 +1024,7 @@ function AppContent() {
                 <Navigate
                   to={{ pathname: '/tasks', search: location.search }}
                   replace
-                  state={{ taskRouteError: 'That task link is not valid.' } satisfies TaskRouteNavigationState}
+                  state={{ taskRouteError: t('app.taskRoute.invalidLink') } satisfies TaskRouteNavigationState}
                 />
               }
             />
@@ -1063,7 +1067,7 @@ function AppContent() {
             className="shrink-0 font-medium underline decoration-red-300 underline-offset-2 hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500"
             onClick={() => navigate(`${location.pathname}${location.search}`, { replace: true, state: null })}
           >
-            Dismiss
+            {t('app.dismiss')}
           </button>
         </div>
       )}
@@ -1101,7 +1105,10 @@ function AppContent() {
       {/* Task Creation Confirmation Toast */}
       {taskConfirmation && (
         <SuccessToast
-          message={`${taskConfirmation.isDraft ? 'Draft' : 'Task'} "${taskConfirmation.task.title}" created successfully! (${taskConfirmation.task.id.replace('task-', '')})`}
+          message={t(taskConfirmation.isDraft ? 'app.draftCreated' : 'app.taskCreated', {
+            title: taskConfirmation.task.title,
+            id: taskConfirmation.task.id.replace('task-', ''),
+          })}
           onDismiss={() => setTaskConfirmation(null)}
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
