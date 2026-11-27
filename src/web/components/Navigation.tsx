@@ -14,7 +14,9 @@ const Navigation: React.FC<NavigationProps> = ({projectName, loadingMessage}) =>
             <div className="h-full flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{projectName || t('shell.loadingEllipsis')}</h1>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{t('shell.header.poweredBy')}</span>
+                    {t('shell.header.poweredBy') && (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{t('shell.header.poweredBy')}</span>
+                    )}
                     <a
                         href="https://backlog.md"
                         target="_blank"
@@ -23,6 +25,9 @@ const Navigation: React.FC<NavigationProps> = ({projectName, loadingMessage}) =>
                     >
                         Backlog.md
                     </a>
+                    {t('common.poweredBySuffix') && (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{t('common.poweredBySuffix')}</span>
+                    )}
                 </div>
                 <div className="flex items-center gap-3">
                     <BranchIndexingIndicator message={loadingMessage} />

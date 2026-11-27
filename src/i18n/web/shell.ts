@@ -182,7 +182,7 @@ export const shellMessages = defineMessages(
 		"shell.toast.taskCreated": 'タスク "{title}" を作成しました ({id})',
 		"shell.toast.draftCreated": '下書き "{title}" を作成しました ({id})',
 
-		"shell.header.poweredBy": "powered by",
+		"shell.header.poweredBy": "",
 		"shell.theme.switchToDark": "ダークモードに切り替え",
 		"shell.theme.switchToLight": "ライトモードに切り替え",
 		"shell.indexing.branches": "ブランチをインデックス中",

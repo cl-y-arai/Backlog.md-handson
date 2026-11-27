@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { t } from "../i18n";
+import { localizeServerMessage, t } from "../i18n";
 
 interface BranchIndexingIndicatorProps {
 	message?: string | null;
@@ -44,7 +44,7 @@ export function BranchIndexingIndicator({
 
 	if (!mounted) return null;
 
-	const detail = lastMessageRef.current ?? undefined;
+	const detail = lastMessageRef.current ? localizeServerMessage(lastMessageRef.current) : undefined;
 	return (
 		<>
 			<div

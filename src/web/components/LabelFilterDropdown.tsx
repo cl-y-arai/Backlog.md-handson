@@ -11,6 +11,8 @@ interface LabelFilterDropdownProps {
 	emptyLabel?: string;
 	noOptionsLabel?: string;
 	clearLabel?: string;
+	/** Display text for an option; the option value passed to onChange is unchanged. */
+	formatOption?: (value: string) => string;
 }
 
 export default function LabelFilterDropdown({
@@ -23,6 +25,7 @@ export default function LabelFilterDropdown({
 	emptyLabel = t("board.labels.all"),
 	noOptionsLabel = t("board.labels.none"),
 	clearLabel = t("board.labels.clear"),
+	formatOption = (value) => value,
 }: LabelFilterDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -68,7 +71,7 @@ export default function LabelFilterDropdown({
 						{selectedLabels.length === 0
 							? emptyLabel
 							: selectedLabels.length === 1
-								? selectedLabels[0]
+								? formatOption(selectedLabels[0] ?? "")
 								: t("board.labels.selectedCount", { count: selectedLabels.length })}
 					</span>
 				</div>
@@ -95,7 +98,7 @@ export default function LabelFilterDropdown({
 										onChange={() => toggleLabel(label)}
 										className="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
 									/>
-									<span className="truncate">{label}</span>
+									<span className="truncate">{formatOption(label)}</span>
 								</label>
 							);
 						})
