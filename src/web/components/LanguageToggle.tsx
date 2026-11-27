@@ -1,21 +1,32 @@
 import React from 'react';
+import type { Locale } from '../../i18n/locale';
 import { getLocale, switchLocale, t } from '../i18n';
 
-/** Switches the browser UI between English and Japanese; shows the language it switches to. */
+// Each language is named in its own script so a reader can find it whatever language is showing.
+const LANGUAGE_NAMES: Record<Locale, string> = {
+	en: 'English',
+	ja: '日本語',
+	ar: 'العربية',
+};
+
+/** Switches the browser UI language; the page reloads in the chosen language. */
 const LanguageToggle: React.FC = () => {
-	const next = getLocale() === 'ja' ? 'en' : 'ja';
+	const current = getLocale();
 	const label = t('common.language.switch');
 	return (
-		<button
-			type="button"
-			onClick={() => switchLocale(next)}
-			className="px-2 py-1 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2 dark:focus:ring-stone-400 dark:focus:ring-offset-gray-900"
+		<select
+			value={current}
+			onChange={(event) => switchLocale(event.target.value as Locale)}
+			className="py-1 px-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-stone-500 dark:focus:ring-stone-400"
 			aria-label={label}
 			title={label}
-			lang={next}
 		>
-			{next === 'ja' ? '日本語' : 'English'}
-		</button>
+			{(Object.keys(LANGUAGE_NAMES) as Locale[]).map((locale) => (
+				<option key={locale} value={locale} lang={locale}>
+					{LANGUAGE_NAMES[locale]}
+				</option>
+			))}
+		</select>
 	);
 };
 

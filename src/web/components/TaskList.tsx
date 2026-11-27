@@ -88,9 +88,9 @@ function getAssigneeInitials(value: string): string {
 	return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
 }
 
-// Japanese shows the three default priorities translated; English keeps the existing label as is.
+// Translated languages show the three default priorities translated; English keeps the existing label as is.
 function priorityDisplayLabel(value: string | undefined, fallback: string): string {
-	if (getLocale() !== "ja") return fallback;
+	if (getLocale() === "en") return fallback;
 	const normalized = normalizePriorityValue(value);
 	if (normalized === "high" || normalized === "medium" || normalized === "low") {
 		return t(`lists.priority.${normalized}`);

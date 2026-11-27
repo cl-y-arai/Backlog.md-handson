@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { HealthCheckProvider } from './contexts/HealthCheckContext';
+import { localeDirection } from '../i18n/locale';
 import { getLocale, getSavedLocale, setLocale, t } from './i18n';
 
 async function fetchServerLocale(): Promise<string | undefined> {
@@ -20,6 +21,7 @@ async function fetchServerLocale(): Promise<string | undefined> {
 async function loadLocale(): Promise<void> {
   setLocale(getSavedLocale() ?? (await fetchServerLocale()));
   document.documentElement.lang = getLocale();
+  document.documentElement.dir = localeDirection(getLocale());
   document.title = t('common.document.title');
 }
 

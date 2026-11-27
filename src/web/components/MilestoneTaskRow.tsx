@@ -3,9 +3,9 @@ import type { Task } from "../../types";
 import { normalizePriorityValue } from "../../utils/priority-config";
 import { getLocale, statusLabel, t } from "../i18n";
 
-// Japanese shows the three default priorities translated; English keeps the stored value as before.
+// Translated languages show the three default priorities translated; English keeps the stored value as before.
 function priorityDisplayLabel(value: string): string {
-	if (getLocale() !== "ja") return value;
+	if (getLocale() === "en") return value;
 	const normalized = normalizePriorityValue(value);
 	if (normalized === "high" || normalized === "medium" || normalized === "low") {
 		return t(`lists.priority.${normalized}`);

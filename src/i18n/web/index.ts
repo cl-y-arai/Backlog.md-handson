@@ -15,4 +15,5 @@ export type WebMessageKey = AreaKeys<(typeof AREAS)[number]> & string;
 export const webMessages: Record<Locale, Record<WebMessageKey, string>> = {
 	en: Object.assign({}, ...AREAS.map((area) => area.en)),
 	ja: Object.assign({}, ...AREAS.map((area) => area.ja)),
+	ar: Object.assign({}, ...AREAS.map((area) => area.ar)),
 };

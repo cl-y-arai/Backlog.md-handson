@@ -1,10 +1,20 @@
 import { DEFAULT_STATUSES } from "../constants/index.ts";
 
-export type Locale = "en" | "ja";
+export const LOCALES = ["en", "ja", "ar"] as const;
+export type Locale = (typeof LOCALES)[number];
 
-/** `ja` (any case, surrounding spaces ignored) selects Japanese; anything else, including no value, selects English. */
+/**
+ * `ja` selects Japanese and `ar` Arabic (any case, surrounding spaces ignored); anything else,
+ * including no value, selects English.
+ */
 export function parseLocale(value: string | null | undefined): Locale {
-	return value?.trim().toLowerCase() === "ja" ? "ja" : "en";
+	const normalized = value?.trim().toLowerCase();
+	return LOCALES.find((locale) => locale === normalized) ?? "en";
+}
+
+/** Arabic is written right to left; the other locales left to right. */
+export function localeDirection(locale: Locale): "ltr" | "rtl" {
+	return locale === "ar" ? "rtl" : "ltr";
 }
 
 /** Replaces `{name}` placeholders with `params.name`; unknown placeholders are left as written. */
@@ -20,12 +30,13 @@ export function findDefaultStatus(status: string): (typeof DEFAULT_STATUSES)[num
 }
 
 /**
- * Pairs an area's English messages with their Japanese translations. The Japanese table must
- * provide every English key, so a missing translation fails the type check.
+ * Pairs an area's English messages with their Japanese and Arabic translations. Each translation
+ * must provide every English key, so a missing translation fails the type check.
  */
 export function defineMessages<const E extends Record<string, string>>(
 	en: E,
 	ja: Record<keyof E, string>,
-): { en: E; ja: Record<keyof E, string> } {
-	return { en, ja };
+	ar: Record<keyof E, string>,
+): Record<Locale, Record<keyof E, string>> & { en: E } {
+	return { en, ja, ar };
 }

@@ -1,12 +1,13 @@
+import { ar } from "./ar.ts";
 import { en, type MessageKey } from "./en.ts";
 import { ja } from "./ja.ts";
 import { findDefaultStatus, formatMessage, type Locale, parseLocale } from "./locale.ts";
 
 export type { Locale, MessageKey };
 
-const MESSAGES: Record<Locale, Record<MessageKey, string>> = { en, ja };
+const MESSAGES: Record<Locale, Record<MessageKey, string>> = { en, ja, ar };
 
-/** Reads BACKLOG_LANG on every call; `ja` selects Japanese and anything else, including unset, selects English. */
+/** Reads BACKLOG_LANG on every call; `ja` selects Japanese, `ar` Arabic, and anything else, including unset, English. */
 export function resolveLocale(env: NodeJS.ProcessEnv = process.env): Locale {
 	return parseLocale(env.BACKLOG_LANG);
 }
