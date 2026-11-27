@@ -449,7 +449,7 @@ export const docsMessages = defineMessages(
 		"docs.init.step.project": "المشروع",
 		"docs.init.step.integration": "التكامل",
 		"docs.init.step.setup": "الإعداد",
-		"docs.init.step.config": "التهيئة",
+		"docs.init.step.config": "الإعدادات",
 		"docs.init.step.initialize": "تهيئة",
 		"docs.init.projectNameHelp": "أدخل اسمًا لمشروعك. سيُعرض في الواجهة ويُستخدم لتعريف المشروع.",
 		"docs.init.projectNamePlaceholder": "مشروعي الرائع",
