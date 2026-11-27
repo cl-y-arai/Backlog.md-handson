@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { type Task } from '../../types';
 import StoredDate from './StoredDate';
-import { formatPriorityLabel } from '../../utils/priority-config';
+import { formatPriorityLabel, normalizePriorityValue } from '../../utils/priority-config';
+import { getLocale, t } from '../i18n';
+
+// Japanese shows the three default priorities translated; English keeps the existing label as is.
+function priorityDisplayLabel(value: string | undefined, fallback: string): string {
+  if (getLocale() !== 'ja') return fallback;
+  const normalized = normalizePriorityValue(value);
+  if (normalized === 'high' || normalized === 'medium' || normalized === 'low') {
+    return t(`lists.priority.${normalized}`);
+  }
+  return fallback;
+}
 
 interface DraftsListProps {
   onEditTask: (task: Task) => void;
@@ -33,7 +44,7 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
       setLoading(true);
       const response = await fetch('/api/drafts');
       if (!response.ok) {
-        throw new Error(`Failed to load drafts: ${response.statusText}`);
+        throw new Error(t('lists.drafts.loadFailedWithStatus', { status: response.statusText }));
       }
       const draftsData = await response.json();
       // Sort drafts by ID descending (newest first) - same as TaskList
@@ -46,7 +57,7 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
       setDrafts(sortedDrafts);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load drafts');
+      setError(err instanceof Error ? err.message : t('lists.drafts.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -59,13 +70,13 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to promote draft: ${response.statusText}`);
+        throw new Error(t('lists.drafts.promoteFailedWithStatus', { status: response.statusText }));
       }
       
       // Reload drafts after successful promotion
       await loadDrafts();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to promote draft');
+      setError(err instanceof Error ? err.message : t('lists.drafts.promoteFailed'));
     }
   };
 
@@ -85,7 +96,7 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-gray-500 dark:text-gray-400">Loading drafts...</div>
+        <div className="text-gray-500 dark:text-gray-400">{t('lists.drafts.loading')}</div>
       </div>
     );
   }
@@ -93,12 +104,12 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
 	  if (error) {
 	    return (
 	      <div className="flex-1 flex items-center justify-center">
-	        <div className="text-red-600 dark:text-red-400">Error: {error}</div>
+	        <div className="text-red-600 dark:text-red-400">{t('lists.drafts.error', { error })}</div>
 	        <button 
 	          onClick={loadDrafts}
 	          className="ml-4 inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-colors"
 	        >
-	          Retry
+	          {t('lists.drafts.retry')}
 	        </button>
 	      </div>
     );
@@ -107,16 +118,18 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
   return (
     <div className="page-shell transition-colors duration-200">
       <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Draft Tasks</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('lists.drafts.title')}</h1>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              {drafts.length} draft{drafts.length !== 1 ? 's' : ''}
+              {drafts.length === 1
+                ? t('lists.drafts.countOne', { count: drafts.length })
+                : t('lists.drafts.countOther', { count: drafts.length })}
             </div>
 	            <button 
 	              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 dark:focus:ring-offset-gray-900 transition-colors duration-200" 
 	              onClick={onNewDraft}
 	            >
-	              + New Draft
+	              {t('lists.drafts.newDraft')}
             </button>
           </div>
         </div>
@@ -126,8 +139,8 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
             <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No drafts</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Draft tasks will appear here before they're promoted to the main backlog.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{t('lists.drafts.empty.title')}</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('lists.drafts.empty.hint')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -142,20 +155,20 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
                       <h3 className="text-lg font-medium text-gray-900 dark:text-white">{draft.title}</h3>
                       {draft.priority && (
                         <span className={`px-2 py-1 text-xs font-medium rounded-circle ${getPriorityColor(draft.priority)}`}>
-                          {formatPriorityLabel(draft.priority)}
+                          {priorityDisplayLabel(draft.priority, formatPriorityLabel(draft.priority))}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400 mb-2">
                       <span>{draft.id}</span>
-                      <span>Created: <StoredDate value={draft.createdDate} dateFormat={dateFormat} /></span>
+                      <span>{t('lists.drafts.created')} <StoredDate value={draft.createdDate} dateFormat={dateFormat} /></span>
                       {draft.updatedDate && (
-                        <span>Updated: <StoredDate value={draft.updatedDate} dateFormat={dateFormat} /></span>
+                        <span>{t('lists.drafts.updated')} <StoredDate value={draft.updatedDate} dateFormat={dateFormat} /></span>
                       )}
                     </div>
                     {draft.assignee && draft.assignee.length > 0 && (
                       <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Assigned to:</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{t('lists.drafts.assignedTo')}</span>
                         <div className="flex flex-wrap gap-1">
                           {draft.assignee.map((person) => (
                             <span key={person} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 rounded-circle">
@@ -183,7 +196,7 @@ const DraftsList: React.FC<DraftsListProps> = ({ onEditTask, onNewDraft, dateFor
                       }}
                       className="inline-flex items-center px-3 py-1.5 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400 dark:focus:ring-offset-gray-800 transition-colors duration-200"
                     >
-                      Promote to Task
+                      {t('lists.drafts.promote')}
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import { useHealthCheckContext } from "../contexts/HealthCheckContext";
+import { t } from "../i18n";
 import { SuccessToast } from "./SuccessToast";
 
 export function HealthIndicator() {
@@ -11,14 +12,14 @@ export function HealthIndicator() {
 				<div className="flex items-center gap-3">
 					<div className="w-2 h-2 bg-white rounded-circle animate-pulse" />
 					<span className="font-medium">
-						Server disconnected
+						{t("shell.health.disconnected")}
 					</span>
 				</div>
 					<button
 						onClick={retry}
 						className="px-3 py-1.5 bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 rounded text-xs font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 dark:focus:ring-red-400"
 					>
-						Retry
+						{t("shell.action.retry")}
 					</button>
 			</div>
 		);
@@ -31,7 +32,7 @@ export function HealthIndicator() {
 export function HealthSuccessToast({ onDismiss }: { onDismiss: () => void }) {
 	return (
 		<SuccessToast 
-			message="Connection restored!" 
+			message={t("shell.health.restored")} 
 			onDismiss={onDismiss}
 		/>
 	);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "../i18n";
 
 interface LabelFilterDropdownProps {
 	availableLabels: string[];
@@ -18,10 +19,10 @@ export default function LabelFilterDropdown({
 	onChange,
 	menuId,
 	className = "min-w-[200px]",
-	label = "Labels",
-	emptyLabel = "All",
-	noOptionsLabel = "No labels",
-	clearLabel = "Clear label filter",
+	label = t("board.labels.label"),
+	emptyLabel = t("board.labels.all"),
+	noOptionsLabel = t("board.labels.none"),
+	clearLabel = t("board.labels.clear"),
 }: LabelFilterDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -68,7 +69,7 @@ export default function LabelFilterDropdown({
 							? emptyLabel
 							: selectedLabels.length === 1
 								? selectedLabels[0]
-								: `${selectedLabels.length} selected`}
+								: t("board.labels.selectedCount", { count: selectedLabels.length })}
 					</span>
 				</div>
 			</button>

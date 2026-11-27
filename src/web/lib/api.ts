@@ -13,6 +13,7 @@ import type {
 	Task,
 	TaskStatus,
 } from "../../types/index.ts";
+import { t } from "../i18n.ts";
 
 const API_BASE = "/api";
 
@@ -113,7 +114,7 @@ export class ApiError extends Error {
 }
 
 export class NetworkError extends Error {
-	constructor(message = "Network request failed") {
+	constructor(message = t("shell.api.networkFailed")) {
 		super(message);
 		this.name = "NetworkError";
 	}
@@ -207,7 +208,9 @@ export class ApiClient {
 		if (lastError instanceof ApiError) {
 			throw lastError;
 		}
-		throw new NetworkError(`Request failed after ${retries + 1} attempts: ${lastError?.message}`);
+		throw new NetworkError(
+			t("shell.api.requestFailedAfterAttempts", { attempts: retries + 1, message: String(lastError?.message) }),
+		);
 	}
 
 	private async fetchWithoutRetry(url: string, options: RequestInit = {}): Promise<Response> {
@@ -422,7 +425,7 @@ export class ApiClient {
 	async fetchStatuses(): Promise<string[]> {
 		const response = await fetch(`${API_BASE}/statuses`);
 		if (!response.ok) {
-			throw new Error("Failed to fetch statuses");
+			throw new Error(t("shell.api.fetchStatusesFailed"));
 		}
 		return response.json();
 	}
@@ -430,7 +433,7 @@ export class ApiClient {
 	async fetchConfig(): Promise<BacklogConfig> {
 		const response = await fetch(`${API_BASE}/config`);
 		if (!response.ok) {
-			throw new Error("Failed to fetch config");
+			throw new Error(t("shell.api.fetchConfigFailed"));
 		}
 		return response.json();
 	}
@@ -444,7 +447,7 @@ export class ApiClient {
 			body: JSON.stringify(config),
 		});
 		if (!response.ok) {
-			throw new Error("Failed to update config");
+			throw new Error(t("shell.api.updateConfigFailed"));
 		}
 		return response.json();
 	}
@@ -452,7 +455,7 @@ export class ApiClient {
 	async fetchDocs(): Promise<Document[]> {
 		const response = await fetch(`${API_BASE}/docs`);
 		if (!response.ok) {
-			throw new Error("Failed to fetch documentation");
+			throw new Error(t("shell.api.fetchDocumentationFailed"));
 		}
 		return response.json();
 	}
@@ -460,7 +463,7 @@ export class ApiClient {
 	async fetchDoc(filename: string): Promise<Document> {
 		const response = await fetch(`${API_BASE}/docs/${encodeURIComponent(filename)}`);
 		if (!response.ok) {
-			throw await toApiError(response, "Failed to fetch document");
+			throw await toApiError(response, t("shell.api.fetchDocumentFailed"));
 		}
 		return response.json();
 	}
@@ -468,7 +471,7 @@ export class ApiClient {
 	async fetchDocument(id: string): Promise<Document> {
 		const response = await fetch(`${API_BASE}/doc/${encodeURIComponent(id)}`);
 		if (!response.ok) {
-			throw await toApiError(response, "Failed to fetch document");
+			throw await toApiError(response, t("shell.api.fetchDocumentFailed"));
 		}
 		return response.json();
 	}
@@ -490,7 +493,7 @@ export class ApiClient {
 			body: JSON.stringify(payload),
 		});
 		if (!response.ok) {
-			throw await toApiError(response, "Failed to update document");
+			throw await toApiError(response, t("shell.api.updateDocumentFailed"));
 		}
 		return response.json();
 	}
@@ -504,7 +507,7 @@ export class ApiClient {
 			body: JSON.stringify({ filename, content, path }),
 		});
 		if (!response.ok) {
-			throw new Error("Failed to create document");
+			throw new Error(t("shell.api.createDocumentFailed"));
 		}
 		return response.json();
 	}
@@ -522,7 +525,7 @@ export class ApiClient {
 	async fetchDecisions(): Promise<Decision[]> {
 		const response = await fetch(`${API_BASE}/decisions`);
 		if (!response.ok) {
-			throw new Error("Failed to fetch decisions");
+			throw new Error(t("shell.api.fetchDecisionsFailed"));
 		}
 		return response.json();
 	}
@@ -530,7 +533,7 @@ export class ApiClient {
 	async fetchDecision(id: string): Promise<Decision> {
 		const response = await fetch(`${API_BASE}/decisions/${encodeURIComponent(id)}`);
 		if (!response.ok) {
-			throw await toApiError(response, "Failed to fetch decision");
+			throw await toApiError(response, t("shell.api.fetchDecisionFailed"));
 		}
 		return response.json();
 	}
@@ -538,7 +541,7 @@ export class ApiClient {
 	async fetchDecisionData(id: string): Promise<Decision> {
 		const response = await fetch(`${API_BASE}/decision/${encodeURIComponent(id)}`);
 		if (!response.ok) {
-			throw await toApiError(response, "Failed to fetch decision");
+			throw await toApiError(response, t("shell.api.fetchDecisionFailed"));
 		}
 		return response.json();
 	}
@@ -552,7 +555,7 @@ export class ApiClient {
 			body: JSON.stringify(input),
 		});
 		if (!response.ok) {
-			throw await toApiError(response, "Failed to update decision");
+			throw await toApiError(response, t("shell.api.updateDecisionFailed"));
 		}
 	}
 
@@ -565,7 +568,7 @@ export class ApiClient {
 			body: JSON.stringify({ title }),
 		});
 		if (!response.ok) {
-			throw new Error("Failed to create decision");
+			throw new Error(t("shell.api.createDecisionFailed"));
 		}
 		return response.json();
 	}
@@ -573,7 +576,7 @@ export class ApiClient {
 	async fetchMilestones(): Promise<Milestone[]> {
 		const response = await fetch(`${API_BASE}/milestones`);
 		if (!response.ok) {
-			throw new Error("Failed to fetch milestones");
+			throw new Error(t("shell.api.fetchMilestonesFailed"));
 		}
 		return response.json();
 	}
@@ -581,7 +584,7 @@ export class ApiClient {
 	async fetchArchivedMilestones(): Promise<Milestone[]> {
 		const response = await fetch(`${API_BASE}/milestones/archived`);
 		if (!response.ok) {
-			throw new Error("Failed to fetch archived milestones");
+			throw new Error(t("shell.api.fetchArchivedMilestonesFailed"));
 		}
 		return response.json();
 	}
@@ -589,7 +592,7 @@ export class ApiClient {
 	async fetchMilestone(id: string): Promise<Milestone> {
 		const response = await fetch(`${API_BASE}/milestones/${encodeURIComponent(id)}`);
 		if (!response.ok) {
-			throw new Error("Failed to fetch milestone");
+			throw new Error(t("shell.api.fetchMilestoneFailed"));
 		}
 		return response.json();
 	}
@@ -604,7 +607,7 @@ export class ApiClient {
 		});
 		if (!response.ok) {
 			const data = await response.json().catch(() => ({}));
-			throw new Error(data.error || "Failed to create milestone");
+			throw new Error(data.error || t("shell.api.createMilestoneFailed"));
 		}
 		return response.json();
 	}
@@ -623,7 +626,7 @@ export class ApiClient {
 		});
 		if (!response.ok) {
 			const data = await response.json().catch(() => ({}));
-			throw new Error(data.error || "Failed to update milestone");
+			throw new Error(data.error || t("shell.api.updateMilestoneFailed"));
 		}
 		return response.json();
 	}
@@ -641,7 +644,7 @@ export class ApiClient {
 		});
 		if (!response.ok) {
 			const data = await response.json().catch(() => ({}));
-			throw new Error(data.error || "Failed to remove milestone");
+			throw new Error(data.error || t("shell.api.removeMilestoneFailed"));
 		}
 		return response.json();
 	}
@@ -652,7 +655,7 @@ export class ApiClient {
 		});
 		if (!response.ok) {
 			const data = await response.json().catch(() => ({}));
-			throw new Error(data.error || "Failed to archive milestone");
+			throw new Error(data.error || t("shell.api.archiveMilestoneFailed"));
 		}
 		return response.json();
 	}

@@ -1,4 +1,5 @@
 import type { Task } from "../../types";
+import { t } from "../i18n";
 
 interface AcceptanceCriteriaProgressProps {
 	task: Pick<Task, "acceptanceCriteriaItems">;
@@ -36,11 +37,11 @@ export default function AcceptanceCriteriaProgress({ task, density }: Acceptance
 			data-acceptance-criteria-progress
 			data-density={density}
 			role="progressbar"
-			aria-label="Acceptance criteria progress"
+			aria-label={t("board.acceptance.ariaLabel")}
 			aria-valuemin={0}
 			aria-valuemax={progress.total}
 			aria-valuenow={progress.checked}
-			title={`${progress.checked} of ${progress.total} acceptance criteria checked`}
+			title={t("board.acceptance.title", { checked: progress.checked, total: progress.total })}
 		>
 			<svg
 				className={`-rotate-90 shrink-0 ${density === "card" ? "h-3 w-3" : "h-3.5 w-3.5"}`}

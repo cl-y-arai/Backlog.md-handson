@@ -1,4 +1,5 @@
 import React from 'react';
+import { t } from '../i18n';
 
 interface ErrorBoundaryState {
 	hasError: boolean;
@@ -18,13 +19,13 @@ const DefaultErrorFallback: React.FC<{ error?: Error; resetError: () => void }> 
 			<svg className="mx-auto h-12 w-12 text-red-500 dark:text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
 			</svg>
-			<h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Something went wrong</h3>
+			<h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('shell.error.title')}</h3>
 			<p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-				An unexpected error occurred. Please try refreshing the page.
+				{t('shell.error.description')}
 			</p>
 			{error && process.env.NODE_ENV === 'development' && (
 				<details className="mt-4 text-left">
-					<summary className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Technical Details</summary>
+					<summary className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">{t('shell.error.technicalDetails')}</summary>
 					<pre className="mt-2 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-2 rounded overflow-auto transition-colors duration-200">
 						{error.message}
 					</pre>
@@ -34,7 +35,7 @@ const DefaultErrorFallback: React.FC<{ error?: Error; resetError: () => void }> 
 					onClick={resetError}
 					className="mt-4 inline-flex items-center px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm font-medium rounded-lg hover:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-200"
 				>
-					Try Again
+					{t('shell.action.tryAgain')}
 				</button>
 		</div>
 	</div>

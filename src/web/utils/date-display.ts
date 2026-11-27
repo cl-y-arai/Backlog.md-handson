@@ -1,6 +1,6 @@
 import { formatUtcDateForDisplay } from "../../utils/utc-date-display.ts";
-
 import { parseStoredUtcDate } from "../../utils/utc-timestamp.ts";
+import { t } from "../i18n.ts";
 
 const DATE_TIME_REGEX = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/;
 
@@ -118,9 +118,9 @@ export function formatStoredDateForCompactDisplay(
 	const diffDays = todayLocal ? calendarDaysBetween(localDate, todayLocal) : null;
 
 	if (diffDays !== null && diffDays >= 0 && diffDays < 7) {
-		if (diffDays === 0) return { text: "today", title };
-		if (diffDays === 1) return { text: "yesterday", title };
-		return { text: `${diffDays}d ago`, title };
+		if (diffDays === 0) return { text: t("board.date.today"), title };
+		if (diffDays === 1) return { text: t("board.date.yesterday"), title };
+		return { text: t("board.date.daysAgo", { days: diffDays }), title };
 	}
 
 	// Absolute fallback stays compact: the date portion only, in the viewer's timezone.

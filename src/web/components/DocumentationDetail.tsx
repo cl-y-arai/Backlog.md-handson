@@ -12,6 +12,7 @@ import { sanitizeUrlTitle } from '../utils/urlHelpers';
 import StoredDate from './StoredDate';
 import { documentIdKey } from '../../utils/document-id';
 import { ArchiveButton, ArchivedLabel, ArchiveRefusal, useRecordArchive } from './RecordArchive';
+import { t } from '../i18n';
 
 // Custom MDEditor wrapper for proper height handling
 const MarkdownEditor = memo(function MarkdownEditor({
@@ -48,7 +49,7 @@ const MarkdownEditor = memo(function MarkdownEditor({
                     hideToolbar={false}
                     data-color-mode={theme}
                     textareaProps={{
-                        placeholder: 'Write your documentation here...',
+                        placeholder: t('docs.document.editorPlaceholder'),
                         style: {
                             fontSize: '14px',
                             resize: 'none'
@@ -209,7 +210,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
 
     const handleSave = useCallback(async () => {
         if (!docTitle.trim()) {
-            setSaveError(new Error('Document title is required'));
+            setSaveError(new Error(t('docs.document.titleRequired')));
             return;
         }
 
@@ -274,7 +275,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                 navigate(`/documentation/${id}/${sanitizeUrlTitle(normalizedTitle)}`);
             }
         } catch (err) {
-            const error = err instanceof Error ? err : new Error('Failed to save document');
+            const error = err instanceof Error ? err : new Error(t('docs.document.saveFailed'));
             setSaveError(error);
             console.error('Failed to save document:', error);
         } finally {
@@ -310,9 +311,8 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No document selected</h3>
-                    <p className="mt-1 text-sm text-gray-500">Select a document from the sidebar to view its
-                        content.</p>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">{t('docs.document.noneSelected')}</h3>
+                    <p className="mt-1 text-sm text-gray-500">{t('docs.document.selectHint')}</p>
                 </div>
             </div>
         );
@@ -321,7 +321,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
     if (isLoading) {
         return (
             <div className="flex-1 flex items-center justify-center">
-                <div className="text-gray-500">Loading...</div>
+                <div className="text-gray-500">{t('docs.loading')}</div>
             </div>
         );
     }
@@ -346,7 +346,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                                             value={docTitle}
                                             onChange={(e) => setDocTitle(e.target.value)}
                                             className="text-3xl font-bold text-gray-900 dark:text-gray-100 w-full bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                                            placeholder="Document title"
+                                            placeholder={t('docs.document.titlePlaceholder')}
                                         />
                                         <input
                                             type="text"
@@ -358,7 +358,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                                     </div>
                                 ) : (
                                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 transition-colors duration-200">
-                                        {docTitle || document?.title || (title ? decodeURIComponent(title) : `Document ${id}`)}
+                                        {docTitle || document?.title || (title ? decodeURIComponent(title) : t('docs.document.fallbackTitle', {id: id ?? ''}))}
                                     </h1>
                                 )}
                                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
@@ -375,7 +375,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                                         </svg>
-                                        <span>Documentation</span>
+                                        <span>{t('docs.document.typeLabel')}</span>
                                     </div>
                                     {document?.path && (
                                         <div className="flex items-center space-x-2">
@@ -393,7 +393,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                             </svg>
-                                            <span>Created: <StoredDate value={document.createdDate} dateFormat={dateFormat} /></span>
+                                            <span>{t('docs.createdLabel')} <StoredDate value={document.createdDate} dateFormat={dateFormat} /></span>
                                         </div>
                                     )}
                                 </div>
@@ -410,7 +410,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
-                                        Edit
+                                        {t('docs.edit')}
                                     </button>
                                     {currentDocument && !isNewDocument && (
                                         <ArchiveButton onClick={archive} disabled={isArchiving} />
@@ -422,7 +422,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
 	                                            onClick={handleCancelEdit}
 	                                            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors duration-200"
 	                                        >
-	                                            Cancel
+	                                            {t('docs.cancel')}
 	                                        </button>
                                         <button
                                             onClick={handleSave}
@@ -438,7 +438,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                       d="M5 13l4 4L19 7"/>
                                             </svg>
-                                            {isSaving ? 'Saving...' : 'Save'}
+                                            {isSaving ? t('docs.saving') : t('docs.save')}
                                         </button>
                                     </div>
                                 )}
@@ -467,7 +467,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                       d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                             </svg>
-                            <span className="text-sm text-red-700">Failed to save: {saveError.message}</span>
+                            <span className="text-sm text-red-700">{t('docs.document.saveFailedWithMessage', {message: saveError.message})}</span>
                             <button
                                 onClick={() => setSaveError(null)}
                                 className="ml-auto text-red-700 hover:text-red-900"
@@ -485,7 +485,7 @@ export default function DocumentationDetail({docs, onRefreshData, dateFormat}: D
             {/* Save Success Toast */}
             {showSaveSuccess && (
                 <SuccessToast
-                    message={`Document "${docTitle}" saved successfully!`}
+                    message={t('docs.document.saved', {title: docTitle})}
                     onDismiss={() => setShowSaveSuccess(false)}
                     icon={
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

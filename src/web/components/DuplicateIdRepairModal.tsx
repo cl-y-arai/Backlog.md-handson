@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { DuplicateRepairPlan } from "../../core/duplicate-task-repair";
+import { t } from "../i18n";
 import { apiClient } from "../lib/api";
 import Modal from "./Modal";
 
@@ -36,7 +37,7 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 			await onRepaired();
 			handleClose();
 		} catch (repairError) {
-			setError(repairError instanceof Error ? repairError.message : "Duplicate task ID repair failed.");
+			setError(repairError instanceof Error ? repairError.message : t("shell.duplicate.repairFailed"));
 		} finally {
 			setIsRepairing(false);
 		}
@@ -46,19 +47,20 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 		<Modal
 			isOpen={isOpen}
 			onClose={handleClose}
-			title="Repair duplicate task IDs"
+			title={t("shell.duplicate.modalTitle")}
 			maxWidthClass="max-w-4xl"
 			disableEscapeClose={isRepairing}
 			initialFocusRef={cancelButtonRef}
 		>
 			<div className="space-y-5">
 				<p className="text-sm text-gray-700 dark:text-gray-300">
-					Backlog.md found {plan.groups.length} duplicate ID {plan.groups.length === 1 ? "group" : "groups"}. The
-					repair keeps one file in each group at its current ID and assigns new incremental IDs to the others.
+					{t(plan.groups.length === 1 ? "shell.duplicate.intro.one" : "shell.duplicate.intro.other", {
+						count: plan.groups.length,
+					})}
 				</p>
 
 				<div>
-					<h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Files to rename</h3>
+					<h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shell.duplicate.filesToRename")}</h3>
 					<div className="max-h-64 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700">
 						<ul className="divide-y divide-gray-200 dark:divide-gray-700">
 							{plan.changes.map((change) => (
@@ -80,13 +82,13 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 				<div className="rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
 					<h3 className="text-sm font-semibold text-amber-950 dark:text-amber-100">
 						{plan.referenceScanComplete
-							? `References requiring review: ${plan.references.length}`
-							: "Reference scan incomplete"}
+							? t("shell.duplicate.referencesToReview", { count: plan.references.length })
+							: t("shell.duplicate.referenceScanIncomplete")}
 					</h3>
 					<p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
 						{plan.referenceScanComplete
-							? "References are not changed automatically because an old duplicate ID does not identify which task was meant."
-							: "Backlog.md could not inspect every Markdown file, so automatic repair is blocked until the failures below are resolved."}
+							? t("shell.duplicate.referencesNotChanged")
+							: t("shell.duplicate.referenceScanBlocked")}
 					</p>
 					{plan.references.length > 0 && (
 						<ul className="mt-3 max-h-40 space-y-2 overflow-y-auto text-xs text-amber-950 dark:text-amber-100">
@@ -102,7 +104,7 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 
 				{plan.blockedReasons.length > 0 && (
 					<div className="rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/30">
-						<h3 className="text-sm font-semibold text-red-900 dark:text-red-100">Automatic repair is blocked</h3>
+						<h3 className="text-sm font-semibold text-red-900 dark:text-red-100">{t("shell.duplicate.repairBlocked")}</h3>
 						<ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-800 dark:text-red-200">
 							{plan.blockedReasons.map((reason) => (
 								<li key={reason}>{reason}</li>
@@ -113,10 +115,11 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 
 				{showConfirmation && plan.repairable && (
 					<div className="rounded-md border border-amber-300 bg-amber-100 p-4 dark:border-amber-700 dark:bg-amber-900/30">
-						<h3 className="text-sm font-semibold text-amber-950 dark:text-amber-100">Confirm repair</h3>
+						<h3 className="text-sm font-semibold text-amber-950 dark:text-amber-100">{t("shell.duplicate.confirmTitle")}</h3>
 						<p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
-							Rename {plan.changes.length} task {plan.changes.length === 1 ? "file" : "files"} now? Task content is
-							preserved; only each selected filename and frontmatter ID change.
+							{t(plan.changes.length === 1 ? "shell.duplicate.confirmBody.one" : "shell.duplicate.confirmBody.other", {
+								count: plan.changes.length,
+							})}
 						</p>
 					</div>
 				)}
@@ -135,7 +138,7 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 						disabled={isRepairing}
 						className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
 					>
-						Cancel
+						{t("shell.action.cancel")}
 					</button>
 					{plan.repairable && !showConfirmation && (
 						<button
@@ -143,7 +146,7 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 							onClick={() => setShowConfirmation(true)}
 							className="rounded-md bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
 						>
-							Continue
+							{t("shell.action.continue")}
 						</button>
 					)}
 					{plan.repairable && showConfirmation && (
@@ -154,7 +157,11 @@ export function DuplicateIdRepairModal({ isOpen, plan, onClose, onRepaired }: Du
 							disabled={isRepairing}
 							className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:bg-red-500 dark:hover:bg-red-400"
 						>
-							{isRepairing ? "Repairing…" : `Repair ${plan.changes.length} ${plan.changes.length === 1 ? "file" : "files"}`}
+							{isRepairing
+								? t("shell.duplicate.repairing")
+								: t(plan.changes.length === 1 ? "shell.duplicate.repairFiles.one" : "shell.duplicate.repairFiles.other", {
+										count: plan.changes.length,
+									})}
 						</button>
 					)}
 				</div>

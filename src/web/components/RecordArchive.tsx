@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient, readMovedFailureState } from '../lib/api';
+import { t } from '../i18n';
 
 /**
  * The Archive button of the document page and the decision page, and what it does. It extends the
@@ -11,16 +12,16 @@ import { apiClient, readMovedFailureState } from '../lib/api';
  * server's message when it refuses, and leaves the page when the record is archived.
  */
 
-/** What differs between the two pages: the noun, the list page, the CLI restore command and the route. */
+/** What differs between the two pages: the commit-failure message, the list page, the CLI restore command and the route. */
 const ARCHIVABLE_PAGES = {
 	document: {
-		noun: 'document',
+		commitFailedKey: 'task.archive.commitFailed.document',
 		listPath: '/documentation',
 		restoreCommand: 'backlog doc restore',
 		archive: (id: string) => apiClient.archiveDoc(id),
 	},
 	decision: {
-		noun: 'decision',
+		commitFailedKey: 'task.archive.commitFailed.decision',
 		listPath: '/decisions',
 		restoreCommand: 'backlog decision restore',
 		archive: (id: string) => apiClient.archiveDecision(id),
@@ -61,7 +62,7 @@ export function useRecordArchive(
 	const archive = useCallback(async () => {
 		if (!record || !route.identity || currentRoute.current !== route || requestRunning.current) return;
 		const page = ARCHIVABLE_PAGES[kind];
-		const question = `Archive "${record.title}"? It leaves the sidebar and search. Restore it from the CLI with: ${page.restoreCommand} ${record.id}`;
+		const question = t('task.archive.confirm', { title: record.title, command: page.restoreCommand, id: record.id });
 		if (!window.confirm(question)) return;
 
 		requestRunning.current = true;
@@ -83,9 +84,7 @@ export function useRecordArchive(
 				// The server logs the Git error.
 				try {
 					if (currentRoute.current === route) {
-						window.alert(
-							`The ${page.noun} was archived, but committing the change failed. Check the repository before retrying.`,
-						);
+						window.alert(t(page.commitFailedKey));
 					}
 				} catch {
 					// A blocked dialog must not keep the page on the archived record.
@@ -120,7 +119,7 @@ export function ArchiveButton({ onClick, disabled }: { onClick: () => void; disa
 			<svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
 			</svg>
-			Archive
+			{t('task.archive.button')}
 		</button>
 	);
 }
@@ -129,7 +128,7 @@ export function ArchiveButton({ onClick, disabled }: { onClick: () => void; disa
 export function ArchivedLabel() {
 	return (
 		<span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700">
-			Archived
+			{t('task.archive.archivedLabel')}
 		</span>
 	);
 }
@@ -143,7 +142,7 @@ export function ArchiveRefusal({ message, onDismiss }: { message: string; onDism
 				<button
 					type="button"
 					onClick={onDismiss}
-					aria-label="Dismiss"
+					aria-label={t('task.archive.dismiss')}
 					className="text-red-700 hover:text-red-900 dark:text-red-200 dark:hover:text-red-100 focus:outline-none focus:ring-2 focus:ring-red-400 rounded"
 				>
 					<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

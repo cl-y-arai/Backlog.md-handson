@@ -10,6 +10,7 @@ import {
   nodesInDirection,
 } from '../../utils/dependency-graph.ts';
 import { createUrlPath } from '../utils/urlHelpers';
+import { statusLabel, t } from '../i18n';
 
 /**
  * Keep an in-app task link on the page the reader is already on: opening a dependency from the
@@ -23,9 +24,10 @@ function useTaskHref(): (id: string, title: string | null) => string {
 }
 
 
-const DIRECTIONS: Array<{ direction: DependencyDirection; heading: string }> = [
-  { direction: 'dependencies', heading: 'Depends on' },
-  { direction: 'dependents', heading: 'Dependents' },
+// Headings are message keys, translated at render time (the locale is not known at module load).
+const DIRECTIONS: Array<{ direction: DependencyDirection; headingKey: 'task.graph.dependsOn' | 'task.graph.dependents' }> = [
+  { direction: 'dependencies', headingKey: 'task.graph.dependsOn' },
+  { direction: 'dependents', headingKey: 'task.graph.dependents' },
 ];
 
 const BADGE_CLASS = 'shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium';
@@ -34,35 +36,35 @@ const NodeBadge: React.FC<{ node: DependencyGraphNode }> = ({ node }) => {
   if (node.state === 'missing') {
     return (
       <span className={`${BADGE_CLASS} bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300`}>
-        Unknown ID
+        {t('task.graph.unknownId')}
       </span>
     );
   }
   if (node.state === 'ambiguous') {
     return (
       <span className={`${BADGE_CLASS} bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300`}>
-        Ambiguous ID
+        {t('task.graph.ambiguousId')}
       </span>
     );
   }
   if (node.completed) {
     return (
       <span className={`${BADGE_CLASS} bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300`}>
-        Completed
+        {t('task.graph.completed')}
       </span>
     );
   }
   return (
     <span className={`${BADGE_CLASS} bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300`}>
-      {node.status}
+      {node.status === null ? null : statusLabel(node.status)}
     </span>
   );
 };
 
-const REPEAT_LABELS: Record<NonNullable<DependencyTreeNode['repeat']>, string> = {
-  cycle: 'Cycle',
-  repeat: 'Shown above',
-};
+const REPEAT_LABEL_KEYS = {
+  cycle: 'task.graph.cycle',
+  repeat: 'task.graph.shownAbove',
+} as const satisfies Record<NonNullable<DependencyTreeNode['repeat']>, string>;
 
 const NodeRow: React.FC<{ entry: DependencyTreeNode; direction: DependencyDirection }> = ({ entry, direction }) => {
   const { node } = entry;
@@ -80,7 +82,7 @@ const NodeRow: React.FC<{ entry: DependencyTreeNode; direction: DependencyDirect
         <Link
           to={taskHref(node.id, node.title)}
           className="min-w-0 break-words text-sm text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
-          aria-label={`Open ${label}`}
+          aria-label={t('task.graph.open', { label })}
         >
           <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{node.id}</span>
           {node.title ? <span className="ml-2">{node.title}</span> : null}
@@ -91,7 +93,7 @@ const NodeRow: React.FC<{ entry: DependencyTreeNode; direction: DependencyDirect
       <NodeBadge node={node} />
       {entry.repeat ? (
         <span className={`${BADGE_CLASS} bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400`}>
-          {REPEAT_LABELS[entry.repeat]}
+          {t(REPEAT_LABEL_KEYS[entry.repeat])}
         </span>
       ) : null}
     </div>
@@ -123,7 +125,8 @@ const TreeList: React.FC<{ entries: DependencyTreeNode[]; direction: DependencyD
 export const DependencyGraphSection: React.FC<{ graph: DependencyGraph }> = ({ graph }) => {
   const resolved = graph;
 
-  const sections = DIRECTIONS.map(({ direction, heading }) => {
+  const sections = DIRECTIONS.map(({ direction, headingKey }) => {
+    const heading = t(headingKey);
     const reached = nodesInDirection(resolved, direction);
     return {
       direction,
@@ -145,7 +148,7 @@ export const DependencyGraphSection: React.FC<{ graph: DependencyGraph }> = ({ g
               {section.heading}
             </h4>
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {`${section.direct} direct, ${section.reached.length} total`}
+              {t('task.graph.counts', { direct: section.direct, total: section.reached.length })}
             </span>
           </div>
           <TreeList entries={section.tree} direction={section.direction} nested={false} />

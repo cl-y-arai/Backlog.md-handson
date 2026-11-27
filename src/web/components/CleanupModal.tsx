@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Modal from "./Modal";
+import { t } from "../i18n";
 import { apiClient } from "../lib/api";
 import StoredDate from "./StoredDate";
 
@@ -17,14 +18,15 @@ interface TaskPreview {
 	createdDate: string;
 }
 
-const AGE_OPTIONS = [
-	{ label: "1 day", value: 1 },
-	{ label: "1 week", value: 7 },
-	{ label: "2 weeks", value: 14 },
-	{ label: "3 weeks", value: 21 },
-	{ label: "1 month", value: 30 },
-	{ label: "3 months", value: 90 },
-	{ label: "1 year", value: 365 },
+// A function, not a constant: labels follow the locale, which is set after this module loads.
+const getAgeOptions = () => [
+	{ label: t("shell.cleanup.age.1day"), value: 1 },
+	{ label: t("shell.cleanup.age.1week"), value: 7 },
+	{ label: t("shell.cleanup.age.2weeks"), value: 14 },
+	{ label: t("shell.cleanup.age.3weeks"), value: 21 },
+	{ label: t("shell.cleanup.age.1month"), value: 30 },
+	{ label: t("shell.cleanup.age.3months"), value: 90 },
+	{ label: t("shell.cleanup.age.1year"), value: 365 },
 ];
 
 type CleanupSelection =
@@ -33,6 +35,7 @@ type CleanupSelection =
 	| { phase: "preview" | "confirm" | "executing"; age: number; tasks: TaskPreview[] };
 
 const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess, dateFormat }) => {
+	const ageOptions = getAgeOptions();
 	const [selection, setSelection] = useState<CleanupSelection>({ phase: "choose" });
 	const [error, setError] = useState<string | null>(null);
 	const requestId = useRef(0);
@@ -68,7 +71,7 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 			setSelection({ phase: "preview", age, tasks: preview.tasks });
 		} catch (err) {
 			if (request !== requestId.current) return;
-			setError(err instanceof Error ? err.message : "Failed to load preview");
+			setError(err instanceof Error ? err.message : t("shell.cleanup.previewFailed"));
 			setSelection({ phase: "choose" });
 		}
 	};
@@ -91,11 +94,11 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 				onSuccess(result.message);
 				handleClose();
 			} else {
-				setError(result.message || "Cleanup failed");
+				setError(result.message || t("shell.cleanup.failed"));
 			}
 		} catch (err) {
 			if (request !== requestId.current) return;
-			setError(err instanceof Error ? err.message : "Failed to execute cleanup");
+			setError(err instanceof Error ? err.message : t("shell.cleanup.executeFailed"));
 		} finally {
 			if (request === requestId.current) {
 				executing.current = false;
@@ -117,17 +120,17 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 			isOpen={isOpen}
 			onClose={handleClose}
 			disableEscapeClose={isExecuting}
-			title="Clean Up Completed Tasks"
+			title={t("shell.cleanup.title")}
 			maxWidthClass="max-w-3xl"
 		>
 			<div className="space-y-6">
 				{/* Age Selector */}
 				<div>
 					<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-						Archive tasks if they are older than:
+						{t("shell.cleanup.ageLabel")}
 					</label>
 					<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-						{AGE_OPTIONS.map((option) => (
+						{ageOptions.map((option) => (
 							<button
 								key={option.value}
 								onClick={() => handleAgeSelect(option.value)}
@@ -154,7 +157,7 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 				{/* Loading Preview */}
 				{isLoadingPreview && (
 					<div className="text-center py-4">
-						<div className="text-gray-600 dark:text-gray-400">Loading preview...</div>
+						<div className="text-gray-600 dark:text-gray-400">{t("shell.cleanup.loadingPreview")}</div>
 					</div>
 				)}
 
@@ -163,12 +166,12 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 					<div>
 						{previewCount === 0 ? (
 							<div className="text-center py-8 text-gray-500 dark:text-gray-400">
-								No tasks found that are older than {AGE_OPTIONS.find((o) => o.value === selectedAge)?.label}.
+								{t("shell.cleanup.noTasks", { age: ageOptions.find((o) => o.value === selectedAge)?.label ?? "" })}
 							</div>
 						) : (
 							<>
 								<h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-									Found {previewCount} task{previewCount !== 1 ? "s" : ""} to clean up:
+									{t(previewCount === 1 ? "shell.cleanup.found.one" : "shell.cleanup.found.other", { count: previewCount })}
 								</h3>
 								<div className="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md">
 									<ul className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -192,7 +195,7 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 										))}
 										{previewCount > 10 && (
 											<li className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 italic">
-												... and {previewCount - 10} more
+												{t("shell.cleanup.andMore", { count: previewCount - 10 })}
 											</li>
 										)}
 									</ul>
@@ -205,9 +208,11 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 				{/* Confirmation Section */}
 				{showConfirmation && previewCount > 0 && (
 					<div className="rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 p-4">
-						<h3 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Confirm Cleanup</h3>
+						<h3 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">{t("shell.cleanup.confirmTitle")}</h3>
 						<p className="text-sm text-amber-700 dark:text-amber-300">
-							Are you sure you want to archive {previewCount} task{previewCount !== 1 ? "s" : ""}?
+							{t(previewCount === 1 ? "shell.cleanup.confirmBody.one" : "shell.cleanup.confirmBody.other", {
+								count: previewCount,
+							})}
 						</p>
 					</div>
 				)}
@@ -219,7 +224,7 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 						disabled={isExecuting}
 						className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors duration-200"
 					>
-						Cancel
+						{t("shell.action.cancel")}
 					</button>
 
 					{selectedAge !== null && previewCount > 0 && (
@@ -232,7 +237,7 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 									disabled={isLoadingPreview || isExecuting}
 									className="px-4 py-2 text-sm font-medium text-white bg-blue-500 dark:bg-blue-600 rounded-md hover:bg-blue-600 dark:hover:bg-blue-700 disabled:opacity-50 transition-colors duration-200"
 								>
-									Continue
+									{t("shell.action.continue")}
 								</button>
 							) : (
 								<button
@@ -240,7 +245,11 @@ const CleanupModal: React.FC<CleanupModalProps> = ({ isOpen, onClose, onSuccess,
 									disabled={isExecuting}
 									className="px-4 py-2 text-sm font-medium text-white bg-red-500 dark:bg-red-600 rounded-md hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 transition-colors duration-200"
 								>
-									{isExecuting ? "Archiving Tasks..." : `Archive ${previewCount} Task${previewCount !== 1 ? "s" : ""}`}
+									{isExecuting
+										? t("shell.cleanup.archiving")
+										: t(previewCount === 1 ? "shell.cleanup.archive.one" : "shell.cleanup.archive.other", {
+												count: previewCount,
+											})}
 								</button>
 							)}
 						</>

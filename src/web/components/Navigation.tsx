@@ -1,6 +1,7 @@
 import React from 'react';
 import { BranchIndexingIndicator } from './BranchIndexingIndicator';
 import ThemeToggle from './ThemeToggle';
+import { t } from '../i18n';
 
 interface NavigationProps {
     projectName: string;
@@ -12,8 +13,8 @@ const Navigation: React.FC<NavigationProps> = ({projectName, loadingMessage}) =>
         <nav className="relative px-8 h-18 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-colors duration-200">
             <div className="h-full flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{projectName || 'Loading...'}</h1>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">powered by</span>
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{projectName || t('shell.loadingEllipsis')}</h1>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{t('shell.header.poweredBy')}</span>
                     <a
                         href="https://backlog.md"
                         target="_blank"

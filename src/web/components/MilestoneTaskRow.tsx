@@ -1,5 +1,17 @@
 import React from "react";
 import type { Task } from "../../types";
+import { normalizePriorityValue } from "../../utils/priority-config";
+import { getLocale, statusLabel, t } from "../i18n";
+
+// Japanese shows the three default priorities translated; English keeps the stored value as before.
+function priorityDisplayLabel(value: string): string {
+	if (getLocale() !== "ja") return value;
+	const normalized = normalizePriorityValue(value);
+	if (normalized === "high" || normalized === "medium" || normalized === "low") {
+		return t(`lists.priority.${normalized}`);
+	}
+	return value;
+}
 
 interface MilestoneTaskRowProps {
 	task: Task;
@@ -57,13 +69,13 @@ const MilestoneTaskRow: React.FC<MilestoneTaskRowProps> = ({
 		</div>
 
 		<div className="w-24 flex justify-center">
-			<span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${statusBadgeClass}`}>{task.status}</span>
+			<span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${statusBadgeClass}`}>{statusLabel(task.status)}</span>
 		</div>
 
 		<div className="w-20 flex justify-center">
 			{task.priority ? (
 				<span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${priorityBadgeClass}`}>
-					{task.priority}
+					{priorityDisplayLabel(task.priority)}
 				</span>
 			) : (
 				<span className="text-xs text-gray-300 dark:text-gray-600">—</span>

@@ -9,6 +9,7 @@ import type { SearchService } from "../core/search-service.ts";
 import { getTaskStatistics } from "../core/statistics.ts";
 import { loadTaskDetail } from "../core/task-detail.ts";
 import { isCreateLockError, isTaskLockError } from "../file-system/operations.ts";
+import { resolveLocale } from "../i18n/index.ts";
 import { AmbiguousDecisionSectionError } from "../markdown/structured-sections.ts";
 import { BacklogToolError } from "../mcp/errors/mcp-errors.ts";
 import { MilestoneHandlers } from "../mcp/tools/milestones/handlers.ts";
@@ -518,6 +519,9 @@ export class BacklogServer {
 					},
 					"/api/version": {
 						GET: async () => await this.handleGetVersion(),
+					},
+					"/api/locale": {
+						GET: () => Response.json({ locale: resolveLocale() }),
 					},
 					"/api/statistics": {
 						GET: async () => await this.handleGetStatistics(),

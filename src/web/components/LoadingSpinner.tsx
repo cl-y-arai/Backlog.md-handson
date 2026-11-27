@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { t } from '../i18n';
 
 interface LoadingSpinnerProps {
 	size?: 'sm' | 'md' | 'lg';
@@ -7,7 +8,7 @@ interface LoadingSpinnerProps {
 }
 const LoadingSpinner = memo(function LoadingSpinner({
 								 size = 'md',
-								 text = 'Loading...',
+								 text = t('shell.loadingEllipsis'),
 								 className = ''
 							 }: LoadingSpinnerProps) {
 	const sizeClasses = {

@@ -1,3 +1,5 @@
+import { t } from "../i18n";
+
 interface BoardLoadingSkeletonProps {
 	message?: string | null;
 	/** Ghost columns to render; pass the configured status count so the real board mounts without a width jump. */
@@ -13,7 +15,7 @@ interface BoardLoadingSkeletonProps {
 export function BoardLoadingSkeleton({ message, columnCount }: BoardLoadingSkeletonProps) {
 	const columns = columnCount && columnCount > 0 ? columnCount : 3;
 	return (
-		<div className="relative" role="status" aria-label="Loading tasks">
+		<div className="relative" role="status" aria-label={t("board.loading")}>
 			<div className="overflow-x-auto pb-2" aria-hidden="true">
 				<div className="flex flex-row flex-nowrap gap-4 w-full">
 					{Array.from({ length: columns }, (_, column) => (
@@ -43,7 +45,7 @@ export function BoardLoadingSkeleton({ message, columnCount }: BoardLoadingSkele
 						aria-hidden="true"
 					/>
 				)}
-				<span className="sr-only">{message ?? "Loading tasks"}</span>
+				<span className="sr-only">{message ?? t("board.loading")}</span>
 			</div>
 		</div>
 	);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "../i18n";
 
 interface BranchIndexingIndicatorProps {
 	message?: string | null;
@@ -58,9 +59,9 @@ export function BranchIndexingIndicator({
 					aria-hidden="true"
 				/>
 				<span aria-hidden="true" className="hidden sm:inline">
-					Indexing branches
+					{t("shell.indexing.branches")}
 				</span>
-				<span className="sr-only">{detail ?? "Indexing branches"}</span>
+				<span className="sr-only">{detail ?? t("shell.indexing.branches")}</span>
 			</div>
 			<div
 				aria-hidden="true"

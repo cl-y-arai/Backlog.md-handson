@@ -1,5 +1,6 @@
 import type { Milestone, Task } from "../../types";
 import { parseStoredUtcDate } from "../../utils/utc-timestamp.ts";
+import { t } from "../i18n.ts";
 import { getMilestoneLabel, milestoneKey, normalizeMilestoneName } from "../utils/milestones";
 
 export type LaneMode = "none" | "milestone";
@@ -12,7 +13,6 @@ export interface LaneDefinition {
 }
 
 export const DEFAULT_LANE_KEY = "lane:none";
-export const NO_MILESTONE_LABEL = "No milestone";
 
 export const laneKeyFromMilestone = (milestone?: string | null): string => {
 	const key = milestoneKey(milestone);
@@ -161,7 +161,7 @@ export function buildLanes(
 		return [
 			{
 				key: DEFAULT_LANE_KEY,
-				label: "All tasks",
+				label: t("board.lane.allTasksLabel"),
 				isNoMilestone: true,
 			},
 		];
@@ -190,7 +190,7 @@ export function buildLanes(
 	return [
 		{
 			key: laneKeyFromMilestone(undefined),
-			label: NO_MILESTONE_LABEL,
+			label: t("board.lane.noMilestone"),
 			milestone: undefined,
 			isNoMilestone: true,
 		},
