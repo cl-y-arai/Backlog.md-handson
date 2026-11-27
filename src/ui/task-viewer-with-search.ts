@@ -20,13 +20,13 @@ import {
 	formatDateForDisplay,
 	formatTaskPlainText,
 } from "../formatters/task-plain-text.ts";
+import { t, translateStatus } from "../i18n/index.ts";
 import type { LabelMatchMode, Milestone, Task } from "../types/index.ts";
 import { copyToClipboard } from "../utils/clipboard.ts";
 import { areLabelSelectionsEqual, collectAvailableLabels } from "../utils/label-filter.ts";
 import {
 	createMilestoneFilterValueResolver,
 	type MilestoneFilterValueResolver,
-	NO_MILESTONE_FILTER_LABEL,
 	NO_MILESTONE_FILTER_VALUE,
 } from "../utils/milestone-filter.ts";
 import { hasAnyPrefix } from "../utils/prefix-config.ts";
@@ -50,7 +50,13 @@ import {
 import { openMultiSelectFilterPopup, openSingleSelectFilterPopup } from "./components/filter-popup.ts";
 import { type BoundaryNavigationKey, createGenericList, type GenericList } from "./components/generic-list.ts";
 import { openHelpPopup } from "./components/help-popup.ts";
-import { formatFooterContent, getTaskListFooterContent } from "./footer-content.ts";
+import {
+	footerLine,
+	formatFooterContent,
+	getFilterFooterContent,
+	getTaskListFooterContent,
+	keyHint,
+} from "./footer-content.ts";
 import { formatHeading } from "./heading.ts";
 import { createLoadingScreen } from "./loading.ts";
 import { formatPriorityMarker } from "./priority-marker.ts";
@@ -81,7 +87,9 @@ export function formatTaskViewerListItem(
 	// The priority marker takes the place of the dash between ID and title, so it adds no columns
 	// and cannot push the title out of a narrow list.
 	const titleSeparator = formatPriorityMarker(task.priority, configuredPriorities) || "-";
-	const dueDateText = task.dueDate ? ` {gray-fg}(due ${formatDateForDisplay(task.dueDate, { dateFormat })}){/}` : "";
+	const dueDateText = task.dueDate
+		? ` {gray-fg}${t("tui.due", { date: formatDateForDisplay(task.dueDate, { dateFormat }) })}{/}`
+		: "";
 	const isCrossBranch = Boolean((task as Task & { branch?: string }).branch);
 	const branchText = isCrossBranch ? ` {green-fg}(${(task as Task & { branch?: string }).branch}){/}` : "";
 
@@ -328,9 +336,9 @@ export async function viewTaskEnhanced(
 		projectName = config?.projectName;
 	} else {
 		// Need to load tasks - show loading screen
-		const loadingScreen = await createLoadingScreen("Loading tasks");
+		const loadingScreen = await createLoadingScreen(t("loading.tasks"));
 		try {
-			loadingScreen?.update("Loading configuration...");
+			loadingScreen?.update(t("loading.config"));
 			const config = await core.filesystem.loadConfig();
 			statuses = config?.statuses || ["To Do", "In Progress", "Done"];
 			labels = config?.labels || [];
@@ -340,10 +348,10 @@ export async function viewTaskEnhanced(
 			dateFormat = config?.dateFormat;
 			projectName = config?.projectName;
 
-			loadingScreen?.update("Loading tasks from branches...");
+			loadingScreen?.update(t("loading.branches"));
 			contentStore = await core.getContentStore();
 
-			loadingScreen?.update("Preparing task list...");
+			loadingScreen?.update(t("loading.preparing"));
 			const tasks = await core.queryTasks();
 			allTasks = tasks.filter((t) => t.id && t.id.trim() !== "" && hasAnyPrefix(t.id));
 		} finally {
@@ -429,7 +437,7 @@ export async function viewTaskEnhanced(
 	let selectionRequestId = 0;
 	let noResultsMessage: string | null = null;
 
-	const screenTitle = formatTuiTitle(options.title || "Tasks", projectName);
+	const screenTitle = formatTuiTitle(options.title || t("title.tasks"), projectName);
 	const screen = options.screen ?? createScreen({ title: screenTitle });
 
 	// Main container
@@ -485,7 +493,7 @@ export async function viewTaskEnhanced(
 			if (filterId === "type") {
 				const nextTypes = await openMultiSelectFilterPopup({
 					screen,
-					title: "Task Type Filter",
+					title: t("filter.typeTitle"),
 					items: configuredTaskTypes,
 					selectedItems: taskTypeFilter,
 				});
@@ -501,7 +509,7 @@ export async function viewTaskEnhanced(
 			if (filterId === "project") {
 				const nextProjects = await openMultiSelectFilterPopup({
 					screen,
-					title: "Project Filter",
+					title: t("filter.projectTitle"),
 					items: configuredProjects,
 					selectedItems: projectFilter,
 				});
@@ -517,7 +525,7 @@ export async function viewTaskEnhanced(
 			if (filterId === "labels") {
 				const nextLabels = await openMultiSelectFilterPopup({
 					screen,
-					title: "Label Filter",
+					title: t("filter.labelTitle"),
 					items: [...availableLabels].sort((a, b) => a.localeCompare(b)),
 					selectedItems: labelFilter,
 				});
@@ -534,7 +542,7 @@ export async function viewTaskEnhanced(
 			if (filterId === "status") {
 				const nextStatuses = await openMultiSelectFilterPopup({
 					screen,
-					title: "Status Filter",
+					title: t("filter.statusTitle"),
 					items: statuses,
 					selectedItems: statusFilter,
 				});
@@ -550,7 +558,7 @@ export async function viewTaskEnhanced(
 			if (filterId === "priority") {
 				const selected = await openSingleSelectFilterPopup({
 					screen,
-					title: "Priority Filter",
+					title: t("filter.priorityTitle"),
 					selectedValue: priorityFilter,
 					choices: [
 						{ label: "All", value: "" },
@@ -568,11 +576,11 @@ export async function viewTaskEnhanced(
 
 			const selected = await openSingleSelectFilterPopup({
 				screen,
-				title: "Milestone Filter",
+				title: t("filter.milestoneTitle"),
 				selectedValue: milestoneFilter,
 				choices: [
 					{ label: "All", value: "" },
-					{ label: NO_MILESTONE_FILTER_LABEL, value: NO_MILESTONE_FILTER_VALUE },
+					{ label: t("filter.noMilestone"), value: NO_MILESTONE_FILTER_VALUE },
 					...availableMilestoneTitles.map((milestone) => ({ label: milestone, value: milestone })),
 				],
 			});
@@ -676,7 +684,7 @@ export async function viewTaskEnhanced(
 		style: { border: { fg: "gray" } },
 		// Every task is listed until a filter or a limit narrows the list; applyFilters() then sets
 		// the count of the rows that are left.
-		label: `\u00A0Tasks (${allTasks.length})\u00A0`,
+		label: `\u00A0${t("tui.tasksLabel", { count: allTasks.length })}\u00A0`,
 	});
 
 	// Detail pane - use right: 0 to ensure it extends to window edge
@@ -838,7 +846,7 @@ export async function viewTaskEnhanced(
 
 		// Update the task list label
 		if (taskListPane.setLabel) {
-			taskListPane.setLabel(`\u00A0Tasks (${filteredTasks.length})\u00A0`);
+			taskListPane.setLabel(`\u00A0${t("tui.tasksLabel", { count: filteredTasks.length })}\u00A0`);
 		}
 
 		if (filteredTasks.length === 0) {
@@ -846,39 +854,42 @@ export async function viewTaskEnhanced(
 			const activeFilters: string[] = [];
 			const trimmedQuery = searchQuery.trim();
 			if (trimmedQuery) {
-				activeFilters.push(`Search: {cyan-fg}${trimmedQuery}{/}`);
+				activeFilters.push(`${t("viewer.filterSearch")} {cyan-fg}${trimmedQuery}{/}`);
 			}
 			if (statusFilter.length > 0) {
-				activeFilters.push(`Status: {cyan-fg}${statusFilter.join(", ")}{/}`);
+				activeFilters.push(
+					`${t("viewer.filterStatus")} {cyan-fg}${statusFilter.map((status) => translateStatus(status)).join(", ")}{/}`,
+				);
 			}
 			if (excludeStatusFilter.length > 0) {
-				activeFilters.push(`Exclude status: {cyan-fg}${excludeStatusFilter.join(", ")}{/}`);
+				activeFilters.push(
+					`${t("viewer.filterExcludeStatus")} {cyan-fg}${excludeStatusFilter.map((status) => translateStatus(status)).join(", ")}{/}`,
+				);
 			}
 			if (taskTypeFilter.length > 0) {
-				activeFilters.push(`Type: {magenta-fg}${taskTypeFilter.join(", ")}{/}`);
+				activeFilters.push(`${t("viewer.filterType")} {magenta-fg}${taskTypeFilter.join(", ")}{/}`);
 			}
 			if (projectFilter.length > 0) {
-				activeFilters.push(`Project: {blue-fg}${projectFilter.join(", ")}{/}`);
+				activeFilters.push(`${t("viewer.filterProject")} {blue-fg}${projectFilter.join(", ")}{/}`);
 			}
 			if (priorityFilter) {
-				activeFilters.push(`Priority: {cyan-fg}${priorityFilter}{/}`);
+				activeFilters.push(`${t("viewer.filterPriority")} {cyan-fg}${priorityFilter}{/}`);
 			}
 			if (labelFilter.length > 0) {
-				activeFilters.push(`Labels: {yellow-fg}${labelFilter.join(", ")}{/}`);
+				activeFilters.push(`${t("viewer.filterLabels")} {yellow-fg}${labelFilter.join(", ")}{/}`);
 			}
 			if (milestoneFilter) {
 				const milestoneFilterLabel =
-					milestoneFilter === NO_MILESTONE_FILTER_VALUE ? NO_MILESTONE_FILTER_LABEL : milestoneFilter;
-				activeFilters.push(`Milestone: {magenta-fg}${milestoneFilterLabel}{/}`);
+					milestoneFilter === NO_MILESTONE_FILTER_VALUE ? t("filter.noMilestone") : milestoneFilter;
+				activeFilters.push(`${t("viewer.filterMilestone")} {magenta-fg}${milestoneFilterLabel}{/}`);
 			}
 			let listPaneMessage: string;
 			if (activeFilters.length > 0) {
-				noResultsMessage = `{bold}No tasks match your current filters{/bold}\n${activeFilters.map((f) => ` • ${f}`).join("\n")}\n\n{gray-fg}Try adjusting the search or clearing filters.{/}`;
-				listPaneMessage = `{bold}No matching tasks{/bold}\n\n${activeFilters.map((f) => ` • ${f}`).join("\n")}`;
+				noResultsMessage = `{bold}${t("viewer.noFilterMatch")}{/bold}\n${activeFilters.map((f) => ` • ${f}`).join("\n")}\n\n{gray-fg}${t("viewer.adjustFilters")}{/}`;
+				listPaneMessage = `{bold}${t("viewer.noMatchingTasks")}{/bold}\n\n${activeFilters.map((f) => ` • ${f}`).join("\n")}`;
 			} else {
-				noResultsMessage =
-					"{bold}No tasks available{/bold}\n{gray-fg}Create a task with {cyan-fg}backlog task create{/cyan-fg}.{/}";
-				listPaneMessage = "{bold}No tasks available{/bold}";
+				noResultsMessage = `{bold}${t("viewer.noTasksAvailable")}{/bold}\n{gray-fg}${t("viewer.createHint", { command: "{cyan-fg}backlog task create{/cyan-fg}" })}{/}`;
+				listPaneMessage = `{bold}${t("viewer.noTasksAvailable")}{/bold}`;
 			}
 			showListEmptyState(listPaneMessage);
 			refreshDetailPane();
@@ -1158,7 +1169,7 @@ export async function viewTaskEnhanced(
 				wrap: true,
 				scrollable: false,
 				padding: { left: 1, right: 1 },
-				content: "{bold}No tasks to display{/bold}",
+				content: `{bold}${t("tui.noTasksToDisplay")}{/bold}`,
 			});
 
 			descriptionBox = undefined;
@@ -1183,7 +1194,10 @@ export async function viewTaskEnhanced(
 			return;
 		}
 
-		screen.title = formatTuiTitle(`Task ${currentSelectedTask.id} - ${currentSelectedTask.title}`, projectName);
+		screen.title = formatTuiTitle(
+			t("title.task", { id: currentSelectedTask.id, title: currentSelectedTask.title }),
+			projectName,
+		);
 
 		const detailContent = generateDetailContent(toTaskDetail(currentSelectedTask, resolveDependencyCorpus()), {
 			resolveMilestoneLabel,
@@ -1258,14 +1272,20 @@ export async function viewTaskEnhanced(
 		const filterFocus = filterHeader.getCurrentFocus();
 		if (currentFocus === "filters" && filterFocus) {
 			if (filterFocus === "search") {
-				content =
-					" {cyan-fg}[←/→]{/} Cursor (edge=Prev/Next) | {cyan-fg}[↑/↓]{/} Back to Tasks | {cyan-fg}[Esc]{/} Cancel | {gray-fg}(Live search){/}";
+				content = getFilterFooterContent("search", "task-list");
 			} else {
-				content = " {cyan-fg}[Enter/Space]{/} Open Picker | {cyan-fg}[←/→]{/} Prev/Next | {cyan-fg}[Esc]{/} Back";
+				content = getFilterFooterContent("control", "task-list");
 			}
 		} else if (currentFocus === "detail") {
-			content =
-				" {cyan-fg}[Tab]{/} View | {cyan-fg}[←]{/} List | {cyan-fg}[↑↓]{/} Scroll | {cyan-fg}[E]{/} Edit | {cyan-fg}[Y]{/} Yank | {cyan-fg}[?]{/} Help | {cyan-fg}[q]{/} Quit";
+			content = footerLine(
+				keyHint("Tab", t("key.view")),
+				keyHint("←", t("key.list")),
+				keyHint("↑↓", t("key.scroll")),
+				keyHint("E", t("key.edit")),
+				keyHint("Y", t("key.yank")),
+				keyHint("?", t("key.help")),
+				keyHint("q", t("key.quit")),
+			);
 		} else {
 			// Task list help
 			content = getTaskListFooterContent({ hasProjects: configuredProjects.length > 0 });
@@ -1288,27 +1308,23 @@ export async function viewTaskEnhanced(
 				return;
 			}
 			if (result.reason === "editor_failed") {
-				showTransientHelp(" {red-fg}Editor exited with an error; task was not modified.{/}");
+				showTransientHelp(` {red-fg}${t("tui.editorError")}{/}`);
 				return;
 			}
 			if (result.reason === "not_found") {
-				showTransientHelp(` {red-fg}Task ${selectedTask.id} was not found on this branch.{/}`);
+				showTransientHelp(` {red-fg}${t("tui.taskNotFoundOnBranch", { id: selectedTask.id })}{/}`);
 				return;
 			}
 			if (result.reason === "identity_conflict") {
-				showTransientHelp(
-					" {red-fg}File identity is inconsistent; make the frontmatter id match the filename, then retry.{/}",
-				);
+				showTransientHelp(` {red-fg}${t("tui.identityMismatch")}{/}`);
 				return;
 			}
 			if (result.reason === "unreadable") {
-				showTransientHelp(" {red-fg}Could not read the saved file; fix its YAML/markdown syntax.{/}");
+				showTransientHelp(` {red-fg}${t("tui.unreadableFile")}{/}`);
 				return;
 			}
 			if (result.reason === "ambiguous") {
-				showTransientHelp(
-					" {red-fg}Numeric draft id is shared by multiple files; rename or fix their ids, then retry.{/}",
-				);
+				showTransientHelp(` {red-fg}${t("tui.sharedDraftId")}{/}`);
 				return;
 			}
 
@@ -1333,12 +1349,12 @@ export async function viewTaskEnhanced(
 
 			applyFilters();
 			if (result.changed) {
-				showTransientHelp(` {green-fg}Task ${result.task?.id ?? selectedTask.id} marked modified.{/}`);
+				showTransientHelp(` {green-fg}${t("tui.markedModified", { id: result.task?.id ?? selectedTask.id })}{/}`);
 				return;
 			}
-			showTransientHelp(` {gray-fg}No changes detected for ${result.task?.id ?? selectedTask.id}.{/}`);
+			showTransientHelp(` {gray-fg}${t("tui.noChanges", { id: result.task?.id ?? selectedTask.id })}{/}`);
 		} catch (_error) {
-			showTransientHelp(" {red-fg}Failed to open editor.{/}");
+			showTransientHelp(` {red-fg}${t("tui.editorFailed")}{/}`);
 		}
 	};
 
@@ -1453,9 +1469,9 @@ export async function viewTaskEnhanced(
 		if (!task) return;
 		const success = await copyToClipboard(task.id);
 		if (success) {
-			showTransientHelp(` {green-fg}Copied ${task.id} to clipboard{/}`);
+			showTransientHelp(` {green-fg}${t("tui.copied", { id: task.id })}{/}`);
 		} else {
-			showTransientHelp(" {red-fg}Failed to copy to clipboard{/}");
+			showTransientHelp(` {red-fg}${t("tui.copyFailed")}{/}`);
 		}
 	});
 
@@ -1601,7 +1617,7 @@ export function generateDetailContent(
 ): { headerContent: string[]; bodyContent: string[] } {
 	const { resolveMilestoneLabel, dateFormat, configuredProjects, configuredPriorities } = options;
 	const headerContent = [
-		` ${wrapStatusColor(formatStatusWithIcon(task.status), getStatusColor(task.status))} {bold}{blue-fg}${task.id}{/blue-fg}{/bold} - ${task.title}`,
+		` ${wrapStatusColor(formatStatusWithIcon(task.status, translateStatus(task.status)), getStatusColor(task.status))} {bold}{blue-fg}${task.id}{/blue-fg}{/bold} - ${task.title}`,
 	];
 
 	// Add cross-branch indicator if task is from another branch
@@ -1609,57 +1625,59 @@ export function generateDetailContent(
 	if (isCrossBranch) {
 		const branchName = (task as Task & { branch?: string }).branch;
 		headerContent.push(
-			` {yellow-fg}⚠ Read-only:{/} This task exists in branch {green-fg}${branchName}{/}. Switch to that branch to edit it.`,
+			` {yellow-fg}${t("detail.readOnlyLabel")}{/} ${t("detail.readOnlyBranch", { branch: `{green-fg}${branchName}{/}` })}`,
 		);
 	}
 
 	if (task.source === "archived") {
-		headerContent.push(" {yellow-fg}⚠ Read-only:{/} This task is archived.");
+		headerContent.push(` {yellow-fg}${t("detail.readOnlyLabel")}{/} ${t("detail.readOnlyArchived")}`);
 	}
 
 	const bodyContent: string[] = [];
-	bodyContent.push(formatHeading("Details", 2));
+	bodyContent.push(formatHeading(t("detail.details"), 2));
 
 	const metadata: string[] = [];
-	metadata.push(`{bold}Created:{/bold} ${formatDateForDisplay(task.createdDate, { dateFormat })}`);
+	metadata.push(`{bold}${t("detail.created")}{/bold} ${formatDateForDisplay(task.createdDate, { dateFormat })}`);
 	if (task.updatedDate && task.updatedDate !== task.createdDate) {
-		metadata.push(`{bold}Updated:{/bold} ${formatDateForDisplay(task.updatedDate, { dateFormat })}`);
+		metadata.push(`{bold}${t("detail.updated")}{/bold} ${formatDateForDisplay(task.updatedDate, { dateFormat })}`);
 	}
 	if (task.dueDate) {
-		metadata.push(`{bold}Due:{/bold} ${formatDateForDisplay(task.dueDate, { dateFormat })}`);
+		metadata.push(`{bold}${t("detail.due")}{/bold} ${formatDateForDisplay(task.dueDate, { dateFormat })}`);
 	}
 	if (task.priority) {
 		const priorityMarker = formatPriorityMarker(task.priority, configuredPriorities);
 		const priorityText = formatPriorityLabel(task.priority);
-		metadata.push(`{bold}Priority:{/bold} ${priorityText}${priorityMarker ? ` ${priorityMarker}` : ""}`);
+		metadata.push(`{bold}${t("detail.priority")}{/bold} ${priorityText}${priorityMarker ? ` ${priorityMarker}` : ""}`);
 	}
 	if (task.type) {
-		metadata.push(`{bold}Type:{/bold} ${formatTaskTypeBadge(task.type)}`);
+		metadata.push(`{bold}${t("detail.type")}{/bold} ${formatTaskTypeBadge(task.type)}`);
 	}
 	if (task.project && configuredProjects?.length) {
-		metadata.push(`{bold}Project:{/bold} ${formatProjectBadge(task.project, configuredProjects)}`);
+		metadata.push(`{bold}${t("detail.project")}{/bold} ${formatProjectBadge(task.project, configuredProjects)}`);
 	}
 	if (task.assignee?.length) {
 		const assigneeList = task.assignee.map((a) => (a.startsWith("@") ? a : `@${a}`)).join(", ");
-		metadata.push(`{bold}Assignee:{/bold} {cyan-fg}${assigneeList}{/}`);
+		metadata.push(`{bold}${t("detail.assignee")}{/bold} {cyan-fg}${assigneeList}{/}`);
 	}
 	if (task.labels?.length) {
-		metadata.push(`{bold}Labels:{/bold} ${task.labels.map((l) => `{yellow-fg}[${l}]{/}`).join(" ")}`);
+		metadata.push(`{bold}${t("detail.labels")}{/bold} ${task.labels.map((l) => `{yellow-fg}[${l}]{/}`).join(" ")}`);
 	}
 	if (task.reporter) {
 		const reporterText = task.reporter.startsWith("@") ? task.reporter : `@${task.reporter}`;
-		metadata.push(`{bold}Reporter:{/bold} {cyan-fg}${reporterText}{/}`);
+		metadata.push(`{bold}${t("detail.reporter")}{/bold} {cyan-fg}${reporterText}{/}`);
 	}
 	if (task.milestone) {
 		const milestoneLabel = resolveMilestoneLabel ? resolveMilestoneLabel(task.milestone) : task.milestone;
-		metadata.push(`{bold}Milestone:{/bold} {magenta-fg}${milestoneLabel}{/}`);
+		metadata.push(`{bold}${t("detail.milestone")}{/bold} {magenta-fg}${milestoneLabel}{/}`);
 	}
 	if (task.parentTaskId) {
 		const parentLabel = task.parentTaskTitle ? `${task.parentTaskId} - ${task.parentTaskTitle}` : task.parentTaskId;
-		metadata.push(`{bold}Parent:{/bold} {blue-fg}${parentLabel}{/}`);
+		metadata.push(`{bold}${t("detail.parent")}{/bold} {blue-fg}${parentLabel}{/}`);
 	}
 	if (task.subtasks?.length) {
-		metadata.push(`{bold}Subtasks:{/bold} ${task.subtasks.length} task${task.subtasks.length > 1 ? "s" : ""}`);
+		metadata.push(
+			`{bold}${t("detail.subtasks")}{/bold} ${t(task.subtasks.length > 1 ? "detail.subtaskCountMany" : "detail.subtaskCountOne", { count: task.subtasks.length })}`,
+		);
 	}
 	if (task.dependencies?.length) {
 		// The Dependency Graph section below names the same dependencies and resolves them, so the
@@ -1669,16 +1687,16 @@ export function generateDetailContent(
 		const readiness = taskReadiness(task);
 		if (readiness) {
 			if (readiness.isReady) {
-				metadata.push("{bold}Readiness:{/bold} {green-fg}✓ Ready to start{/}");
+				metadata.push(`{bold}${t("detail.readiness")}{/bold} {green-fg}${t("detail.ready")}{/}`);
 			} else if (readiness.isBlocked) {
 				// Single-width glyphs only: blessed miscounts East Asian Wide characters and leaves
 				// stale cells behind when the detail pane re-renders a shorter line.
-				metadata.push(`{bold}Readiness:{/bold} {yellow-fg}● ${formatReadinessBlockers(readiness)}{/}`);
+				metadata.push(`{bold}${t("detail.readiness")}{/bold} {yellow-fg}● ${formatReadinessBlockers(readiness)}{/}`);
 			}
 		}
 	}
 	if (task.modifiedFiles?.length) {
-		metadata.push(`{bold}Modified files:{/bold} ${task.modifiedFiles.join(", ")}`);
+		metadata.push(`{bold}${t("detail.modifiedFiles")}{/bold} ${task.modifiedFiles.join(", ")}`);
 	}
 
 	bodyContent.push(metadata.join("\n"));
@@ -1692,21 +1710,21 @@ export function generateDetailContent(
 		? formatDependencyGraphLines(dependencyGraph, { formatLabel: formatDependencyNodeTuiLabel })
 		: [];
 	if (dependencyGraphLines.length > 0) {
-		bodyContent.push(formatHeading("Dependency Graph", 2));
+		bodyContent.push(formatHeading(t("detail.dependencyGraph"), 2));
 		bodyContent.push(dependencyGraphLines.join("\n"));
 		bodyContent.push("");
 	}
 
-	bodyContent.push(formatHeading("Description", 2));
+	bodyContent.push(formatHeading(t("detail.description"), 2));
 	const descriptionText = task.description?.trim();
 	const descriptionContent = descriptionText
 		? transformCodePaths(descriptionText)
-		: "{gray-fg}No description provided{/}";
+		: `{gray-fg}${t("detail.noDescription")}{/}`;
 	bodyContent.push(descriptionContent);
 	bodyContent.push("");
 
 	if (task.references?.length) {
-		bodyContent.push(formatHeading("References", 2));
+		bodyContent.push(formatHeading(t("detail.references"), 2));
 		const formattedRefs = task.references.map((ref) => {
 			// Color URLs differently from file paths
 			if (ref.startsWith("http://") || ref.startsWith("https://")) {
@@ -1719,7 +1737,7 @@ export function generateDetailContent(
 	}
 
 	if (task.documentation?.length) {
-		bodyContent.push(formatHeading("Documentation", 2));
+		bodyContent.push(formatHeading(t("detail.documentation"), 2));
 		const formattedDocs = task.documentation.map((doc) => {
 			if (doc.startsWith("http://") || doc.startsWith("https://")) {
 				return `  {cyan-fg}${doc}{/}`;
@@ -1730,7 +1748,7 @@ export function generateDetailContent(
 		bodyContent.push("");
 	}
 
-	bodyContent.push(formatHeading("Acceptance Criteria", 2));
+	bodyContent.push(formatHeading(t("detail.acceptanceCriteria"), 2));
 	const checklistItems = buildAcceptanceCriteriaItems(task);
 	if (checklistItems.length > 0) {
 		const formattedCriteria = checklistItems.map((item) =>
@@ -1748,11 +1766,11 @@ export function generateDetailContent(
 		);
 		bodyContent.push(formattedCriteria.join("\n"));
 	} else {
-		bodyContent.push("{gray-fg}No acceptance criteria defined{/}");
+		bodyContent.push(`{gray-fg}${t("detail.noAcceptanceCriteria")}{/}`);
 	}
 	bodyContent.push("");
 
-	bodyContent.push(formatHeading("Definition of Done", 2));
+	bodyContent.push(formatHeading(t("detail.definitionOfDone"), 2));
 	const definitionItems = buildDefinitionOfDoneItems(task);
 	if (definitionItems.length > 0) {
 		const formattedDefinition = definitionItems.map((item) =>
@@ -1770,27 +1788,27 @@ export function generateDetailContent(
 		);
 		bodyContent.push(formattedDefinition.join("\n"));
 	} else {
-		bodyContent.push("{gray-fg}No Definition of Done items defined{/}");
+		bodyContent.push(`{gray-fg}${t("detail.noDefinitionOfDone")}{/}`);
 	}
 	bodyContent.push("");
 
 	const implementationPlan = task.implementationPlan?.trim();
 	if (implementationPlan) {
-		bodyContent.push(formatHeading("Implementation Plan", 2));
+		bodyContent.push(formatHeading(t("detail.implementationPlan"), 2));
 		bodyContent.push(transformCodePaths(implementationPlan));
 		bodyContent.push("");
 	}
 
 	const implementationNotes = task.implementationNotes?.trim();
 	if (implementationNotes) {
-		bodyContent.push(formatHeading("Implementation Notes", 2));
+		bodyContent.push(formatHeading(t("detail.implementationNotes"), 2));
 		bodyContent.push(transformCodePaths(implementationNotes));
 		bodyContent.push("");
 	}
 
 	const comments = (task.comments ?? []).filter((comment) => comment.body.trim().length > 0);
 	if (comments.length > 0) {
-		bodyContent.push(formatHeading("Comments", 2));
+		bodyContent.push(formatHeading(t("detail.comments"), 2));
 		for (const comment of comments) {
 			const parts = [`#${comment.index}`];
 			if (comment.author) parts.push(comment.author);
@@ -1803,7 +1821,7 @@ export function generateDetailContent(
 
 	const finalSummary = task.finalSummary?.trim();
 	if (finalSummary) {
-		bodyContent.push(formatHeading("Final Summary", 2));
+		bodyContent.push(formatHeading(t("detail.finalSummary"), 2));
 		bodyContent.push(transformCodePaths(finalSummary));
 		bodyContent.push("");
 	}

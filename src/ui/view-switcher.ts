@@ -4,6 +4,7 @@
  */
 
 import type { Core } from "../core/backlog.ts";
+import { t } from "../i18n/index.ts";
 import type { Task } from "../types/index.ts";
 
 export type ViewType = "task-list" | "task-detail" | "kanban";
@@ -87,7 +88,7 @@ class BackgroundLoader {
 			this.loadingPromise = this.loadKanbanData();
 		} else {
 			// If loading is already in progress, send a status update to the current progress callback
-			this.onProgress?.("Loading tasks from local and remote branches...");
+			this.onProgress?.(t("loading.localRemote"));
 		}
 
 		// Wait for loading to complete

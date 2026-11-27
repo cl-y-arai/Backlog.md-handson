@@ -1,11 +1,14 @@
 import type { BoxInterface, ScreenInterface, TextboxInterface } from "neo-neo-bblessed";
 import { box, textarea, textbox } from "neo-neo-bblessed";
 import { DEFAULT_STATUSES } from "../../constants/index.ts";
+import type { MessageKey } from "../../i18n/en.ts";
+import { t, translateStatus } from "../../i18n/index.ts";
 import type { Task, TaskCreateInput } from "../../types/index.ts";
 import { normalizeDueDate } from "../../utils/due-date.ts";
 import { getPriorityOptions } from "../../utils/priority-config.ts";
 import { getProjectValues } from "../../utils/project-config.ts";
 import { getTaskTypeValues } from "../../utils/task-type-config.ts";
+import { footerLine, keyHint } from "../footer-content.ts";
 import {
 	createPopupChrome,
 	createScrollableViewport,
@@ -175,29 +178,40 @@ const PREFERRED_POPUP_WIDTH = 72;
 const NORMAL_SELECTOR_WIDTH_RATIO = 0.3;
 const COMPACT_SELECTOR_WIDTH_RATIO = 0.44;
 
-function selectorContent(label: string, value: string): string {
-	return `${label}: ${displayChoice(value)} ▼`;
+type SelectorField = "status" | "type" | "priority" | "project";
+
+const SELECTOR_LABEL_KEYS = {
+	status: "composer.status",
+	type: "composer.type",
+	priority: "composer.priority",
+	project: "composer.project",
+} as const satisfies Record<SelectorField, MessageKey>;
+
+/** The selector row text. Status values are shown with their translated display name; the stored value is unchanged. */
+function selectorContent(field: SelectorField, value: string): string {
+	const shown = value ? (field === "status" ? translateStatus(value) : value) : t("composer.none");
+	return `${t(SELECTOR_LABEL_KEYS[field])}: ${shown} ▼`;
 }
 
 function getSelectorContentWidths(options: TaskComposerLayoutOptions): {
 	longest: number;
 	longestCompactColumn: number;
 } {
-	const selectors: Array<[string, FilterPopupChoice[]]> = [
-		["Status", getTaskComposerStatusChoices(options.statuses ?? DEFAULT_STATUSES)],
-		["Type", getTaskComposerTypeChoices(options.types)],
-		["Priority", getTaskComposerPriorityChoices(options.priorities)],
+	const selectors: Array<[SelectorField, FilterPopupChoice[]]> = [
+		["status", getTaskComposerStatusChoices(options.statuses ?? DEFAULT_STATUSES)],
+		["type", getTaskComposerTypeChoices(options.types)],
+		["priority", getTaskComposerPriorityChoices(options.priorities)],
 		...(getProjectValues(options.projects).length > 0
-			? ([["Project", getTaskComposerProjectChoices(options.projects)]] as Array<[string, FilterPopupChoice[]]>)
+			? ([["project", getTaskComposerProjectChoices(options.projects)]] as Array<[SelectorField, FilterPopupChoice[]]>)
 			: []),
 	];
 	let longest = 0;
 	let longestCompactColumn = 0;
-	for (const [label, choices] of selectors) {
+	for (const [field, choices] of selectors) {
 		for (const choice of choices) {
-			const width = Bun.stringWidth(selectorContent(label, choice.value));
+			const width = Bun.stringWidth(selectorContent(field, choice.value));
 			longest = Math.max(longest, width);
-			if (label === "Type" || label === "Priority") longestCompactColumn = Math.max(longestCompactColumn, width);
+			if (field === "type" || field === "priority") longestCompactColumn = Math.max(longestCompactColumn, width);
 		}
 	}
 	return { longest, longestCompactColumn };
@@ -260,12 +274,20 @@ export function getTaskComposerLayout(
 function getTaskComposerHelpText(screenWidth: number, compact: boolean): string {
 	// Each variant has to fit the popup width it is shown at, so drop hints as the screen narrows.
 	if (screenWidth < 60) {
-		return " {cyan-fg}[↑↓←→/Tab]{/} Nav | {cyan-fg}[Enter]{/} Choose";
+		return footerLine(keyHint("↑↓←→/Tab", t("key.nav")), keyHint("Enter", t("key.choose")));
 	}
 	if (compact) {
-		return " {cyan-fg}[↑↓←→/Tab]{/} Nav | {cyan-fg}[Enter]{/} Choose | {cyan-fg}[Esc]{/} Cancel";
+		return footerLine(
+			keyHint("↑↓←→/Tab", t("key.nav")),
+			keyHint("Enter", t("key.choose")),
+			keyHint("Esc", t("key.cancel")),
+		);
 	}
-	return " {cyan-fg}[↑↓/←→/Tab]{/} Navigate | {cyan-fg}[Enter/Space]{/} Choose | {cyan-fg}[Esc]{/} Cancel";
+	return footerLine(
+		keyHint("↑↓/←→/Tab", t("key.navigate")),
+		keyHint("Enter/Space", t("key.choose")),
+		keyHint("Esc", t("key.cancel")),
+	);
 }
 
 type TaskComposerField =
@@ -300,24 +322,27 @@ export function getTaskComposerWorkflowStatuses(statuses: readonly string[]): st
 export function getTaskComposerStatusChoices(statuses: readonly string[]): FilterPopupChoice[] {
 	return [
 		{ label: DRAFT_STATUS, value: DRAFT_STATUS },
-		...getTaskComposerWorkflowStatuses(statuses).map((status) => ({ label: status, value: status })),
+		...getTaskComposerWorkflowStatuses(statuses).map((status) => ({ label: translateStatus(status), value: status })),
 	];
 }
 
 export function getTaskComposerTypeChoices(types?: readonly string[]): FilterPopupChoice[] {
-	return [{ label: "None", value: "" }, ...getTaskTypeValues(types).map((type) => ({ label: type, value: type }))];
+	return [
+		{ label: t("composer.none"), value: "" },
+		...getTaskTypeValues(types).map((type) => ({ label: type, value: type })),
+	];
 }
 
 export function getTaskComposerPriorityChoices(priorities?: readonly string[]): FilterPopupChoice[] {
 	return [
-		{ label: "None", value: "" },
+		{ label: t("composer.none"), value: "" },
 		...getPriorityOptions(priorities).map((priority) => ({ label: priority.label, value: priority.value })),
 	];
 }
 
 export function getTaskComposerProjectChoices(projects?: readonly string[]): FilterPopupChoice[] {
 	return [
-		{ label: "None", value: "" },
+		{ label: t("composer.none"), value: "" },
 		...getProjectValues(projects).map((project) => ({ label: project, value: project })),
 	];
 }
@@ -382,10 +407,6 @@ export class TaskComposerController {
 	}
 }
 
-function displayChoice(value: string): string {
-	return value || "None";
-}
-
 export type TaskComposerOptions = {
 	screen: ScreenInterface;
 	statuses: readonly string[];
@@ -415,7 +436,7 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 		let layout = getTaskComposerLayout(options.screen.width, options.screen.height, options);
 		const { popup, close, reflow } = createPopupChrome({
 			screen: options.screen,
-			title: "Create Task",
+			title: t("composer.title"),
 			helpText: getTaskComposerHelpText(options.screen.width, layout.compact),
 			width: layout.popupWidth,
 			height: layout.popupHeight,
@@ -440,7 +461,7 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 			right: 1,
 			height: 3,
 			border: { type: "line" },
-			label: " Title ",
+			label: ` ${t("composer.fieldTitle")} `,
 			keys: true,
 			mouse: true,
 			inputOnFocus: false,
@@ -456,7 +477,7 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 			right: 1,
 			height: layout.descriptionHeight,
 			border: { type: "line" },
-			label: " Description ",
+			label: ` ${t("composer.fieldDescription")} `,
 			keys: true,
 			mouse: true,
 			inputOnFocus: false,
@@ -471,7 +492,7 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 			right: 1,
 			height: 3,
 			border: { type: "line" },
-			label: " Due ",
+			label: ` ${t("composer.fieldDue")} `,
 			keys: true,
 			mouse: true,
 			inputOnFocus: false,
@@ -486,33 +507,33 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 			right: 1,
 			height: layout.detailsHeight,
 			border: { type: "line" },
-			label: " Details ",
+			label: ` ${t("composer.fieldDetails")} `,
 			style: { border: { fg: "cyan" } },
 		});
 		// The selectors and buttons sit inside the details frame visually, but stay direct
 		// children of the viewport: blessed drops grandchildren of a scrolled viewport, which
 		// would make them invisible on short terminals.
-		const createSelector = (label: string, value: string) =>
+		const createSelector = (field: SelectorField, value: string) =>
 			box({
 				parent: form,
 				top: 0,
 				left: 3,
 				height: 1,
-				content: selectorContent(label, value),
+				content: selectorContent(field, value),
 				keys: true,
 				mouse: true,
 			});
-		const statusField = createSelector("Status", controller.values.status);
-		const typeField = createSelector("Type", controller.values.type);
-		const priorityField = createSelector("Priority", controller.values.priority);
-		const projectField = createSelector("Project", controller.values.project);
+		const statusField = createSelector("status", controller.values.status);
+		const typeField = createSelector("type", controller.values.type);
+		const priorityField = createSelector("priority", controller.values.priority);
+		const projectField = createSelector("project", controller.values.project);
 
 		const actionsLabel = box({
 			parent: form,
 			top: layout.actionsTop,
 			left: 1,
 			height: 1,
-			content: "Actions",
+			content: t("composer.actions"),
 			style: { fg: "cyan", bold: true },
 		});
 		const createAction = box({
@@ -522,7 +543,7 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 			width: 18,
 			height: 1,
 			align: "center",
-			content: "Create task",
+			content: t("composer.create"),
 			keys: true,
 			mouse: true,
 			style: { fg: "green" },
@@ -534,7 +555,7 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 			width: 14,
 			height: 1,
 			align: "center",
-			content: "Cancel",
+			content: t("composer.cancel"),
 			keys: true,
 			mouse: true,
 			style: { fg: "gray" },
@@ -652,13 +673,13 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 			if (hasProjects) {
 				mutableProjectField.show();
 				setFieldGeometry(projectField, { top: tops.project, left: 3, width: "100%-6" });
-				projectField.setContent(selectorContent("Project", controller.values.project));
+				projectField.setContent(selectorContent("project", controller.values.project));
 			} else {
 				mutableProjectField.hide();
 			}
-			statusField.setContent(selectorContent("Status", controller.values.status));
-			typeField.setContent(selectorContent("Type", controller.values.type));
-			priorityField.setContent(selectorContent("Priority", controller.values.priority));
+			statusField.setContent(selectorContent("status", controller.values.status));
+			typeField.setContent(selectorContent("type", controller.values.type));
+			priorityField.setContent(selectorContent("priority", controller.values.priority));
 			scrollFieldIntoView(activeField);
 		};
 
@@ -771,7 +792,7 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 		const submit = async () => {
 			if (pickerOpen || controller.submitting) return;
 			syncInputs();
-			errorBox.setContent(" Creating task...");
+			errorBox.setContent(` ${t("composer.creating")}`);
 			options.screen.render();
 			const task = await controller.create(options.persist);
 			if (task) {
@@ -797,18 +818,16 @@ export async function openTaskComposer(options: TaskComposerOptions): Promise<Ta
 						: field === "priority"
 							? getTaskComposerPriorityChoices(options.priorities)
 							: getTaskComposerProjectChoices(options.projects);
-			const fieldLabel =
-				field === "status" ? "Status" : field === "type" ? "Type" : field === "priority" ? "Priority" : "Project";
 			try {
 				const selected = await openSingleSelectFilterPopup({
 					screen: options.screen,
-					title: `Task ${fieldLabel}`,
+					title: t("composer.pickerTitle", { field: t(SELECTOR_LABEL_KEYS[field]) }),
 					choices,
 					selectedValue: currentValue,
 				});
 				if (selected !== null) {
 					controller.values[field] = selected;
-					widgets[field].setContent(selectorContent(fieldLabel, selected));
+					widgets[field].setContent(selectorContent(field, selected));
 				}
 			} finally {
 				pickerOpen = false;

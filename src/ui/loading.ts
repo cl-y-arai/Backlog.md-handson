@@ -1,5 +1,6 @@
 import type { BoxInterface, ScreenInterface } from "neo-neo-bblessed";
 import { box, log } from "neo-neo-bblessed";
+import { t } from "../i18n/index.ts";
 import { createScreen } from "./tui.ts";
 
 /**
@@ -52,7 +53,7 @@ function createLoadingScreenBase(config: LoadingScreenConfig): {
 	update: (message: string) => void;
 	close: () => void;
 } {
-	const { title = "Loading...", message, height = 7, showSpinner = true, allowScrolling = false } = config;
+	const { title = t("loading.title"), message, height = 7, showSpinner = true, allowScrolling = false } = config;
 
 	// Non-TTY fallback
 	if (!process.stdout.isTTY) {
@@ -87,7 +88,7 @@ function createLoadingScreenBase(config: LoadingScreenConfig): {
 		style: {
 			border: { fg: "cyan" },
 		},
-		label: " Loading ",
+		label: ` ${t("loading.label")} `,
 		padding: {
 			left: 0,
 			right: 0,
@@ -111,12 +112,12 @@ function createLoadingScreenBase(config: LoadingScreenConfig): {
 		spinnerInterval = setInterval(() => {
 			spinnerIndex = (spinnerIndex + 1) % SPINNER_CHARS.length;
 			const spinnerChar = SPINNER_CHARS[spinnerIndex];
-			loadingBox.setLabel?.(` ${spinnerChar} Loading `);
+			loadingBox.setLabel?.(` ${spinnerChar} ${t("loading.label")} `);
 			screen.render();
 		}, SPINNER_INTERVAL_MS);
 
 		// Set initial spinner in label
-		loadingBox.setLabel?.(` ${SPINNER_CHARS[0]} Loading `);
+		loadingBox.setLabel?.(` ${SPINNER_CHARS[0]} ${t("loading.label")} `);
 	}
 
 	// Handle escape/Ctrl+C to close AND exit process immediately

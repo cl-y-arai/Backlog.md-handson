@@ -1,4 +1,5 @@
 import { renderConfiguredTaskIds } from "../commands/help-schema.ts";
+import { t } from "../i18n/index.ts";
 import { INSTRUCTION_GUIDES } from "../mcp/workflow-guides.ts";
 
 type RootEntryOptions = {
@@ -40,34 +41,34 @@ export function formatRootEntry({ version, initialized, color = false }: RootEnt
 	const lines: string[] = [...logoLines, "", `${colorize("Backlog.md", ANSI.title, color)} v${version}`, ""];
 
 	if (!initialized) {
-		lines.push("This directory is not initialized for Backlog.md.", "");
-		lines.push(sectionTitle("Project setup:", color));
-		lines.push(commandLine("backlog init", "Initialize Backlog.md interactively"));
-		lines.push(commandLine("backlog init --defaults", "Initialize with default settings"));
-		lines.push(commandLine("backlog init --no-git", "Initialize without Git integration"));
+		lines.push(t("root.notInitialized"), "");
+		lines.push(sectionTitle(t("root.projectSetup"), color));
+		lines.push(commandLine("backlog init", t("root.initInteractive")));
+		lines.push(commandLine("backlog init --defaults", t("root.initDefaults")));
+		lines.push(commandLine("backlog init --no-git", t("root.initNoGit")));
 		lines.push("");
 	} else {
-		lines.push(sectionTitle("Common workflow:", color));
-		lines.push(commandLine('backlog search "query" --plain', "Search tasks, docs, and decisions"));
-		lines.push(commandLine("backlog task list --plain", "List tasks"));
-		lines.push(commandLine(renderConfiguredTaskIds("backlog task view {{TASK_ID:123}} --plain"), "Read task context"));
-		lines.push(commandLine('backlog task create "Title" -d "Description"', "Create a task"));
-		lines.push(commandLine("backlog board", "Open the TUI Kanban board"));
-		lines.push(commandLine("backlog browser", "Open the Web UI Kanban board"));
+		lines.push(sectionTitle(t("root.commonWorkflow"), color));
+		lines.push(commandLine('backlog search "query" --plain', t("root.search")));
+		lines.push(commandLine("backlog task list --plain", t("root.listTasks")));
+		lines.push(commandLine(renderConfiguredTaskIds("backlog task view {{TASK_ID:123}} --plain"), t("root.readTask")));
+		lines.push(commandLine('backlog task create "Title" -d "Description"', t("root.createTask")));
+		lines.push(commandLine("backlog board", t("root.board")));
+		lines.push(commandLine("backlog browser", t("root.browser")));
 		lines.push("");
 	}
 
-	lines.push(sectionTitle("Local instructions:", color));
-	lines.push(commandLine("backlog instructions", "List workflow guides"));
+	lines.push(sectionTitle(t("root.localInstructions"), color));
+	lines.push(commandLine("backlog instructions", t("root.listGuides")));
 	for (const guide of INSTRUCTION_GUIDES) {
 		lines.push(commandLine(`backlog instructions ${guide.key}`, guide.description));
 	}
 	lines.push("");
 
-	lines.push(sectionTitle("Command help:", color));
-	lines.push(commandLine("backlog <command> --help", "Show options, fields, and examples"));
+	lines.push(sectionTitle(t("root.commandHelp"), color));
+	lines.push(commandLine("backlog <command> --help", t("root.helpDetail")));
 	lines.push("");
-	lines.push("Docs: https://backlog.md");
+	lines.push(t("root.docs", { url: "https://backlog.md" }));
 	lines.push("");
 
 	return `${lines.join("\n")}\n`;

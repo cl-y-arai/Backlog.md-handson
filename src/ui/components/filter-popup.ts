@@ -1,5 +1,7 @@
 import type { BoxInterface, ScreenInterface } from "neo-neo-bblessed";
 import { box, list, scrollablebox } from "neo-neo-bblessed";
+import { t } from "../../i18n/index.ts";
+import { footerLine, keyHint } from "../footer-content.ts";
 import { createGenericList } from "./generic-list.ts";
 
 export interface FilterPopupChoice {
@@ -174,7 +176,12 @@ export async function openSingleSelectFilterPopup(options: {
 			screen: options.screen,
 			title: options.title,
 			helpText:
-				options.helpText ?? " {cyan-fg}[↑↓/jk]{/} Navigate | {cyan-fg}[Enter]{/} Select | {cyan-fg}[Esc]{/} Cancel",
+				options.helpText ??
+				footerLine(
+					keyHint("↑↓/jk", t("key.navigate")),
+					keyHint("Enter", t("key.select")),
+					keyHint("Esc", t("key.cancel")),
+				),
 			width: "48%",
 			height: "60%",
 		});
@@ -285,7 +292,12 @@ export async function openMultiSelectFilterPopup(options: {
 			title: options.title,
 			helpText:
 				options.helpText ??
-				" {cyan-fg}[↑↓/jk]{/} Navigate | {cyan-fg}[Space]{/} Toggle | {cyan-fg}[Enter]{/} Apply | {cyan-fg}[Esc]{/} Cancel",
+				footerLine(
+					keyHint("↑↓/jk", t("key.navigate")),
+					keyHint("Space", t("key.toggle")),
+					keyHint("Enter", t("key.apply")),
+					keyHint("Esc", t("key.cancel")),
+				),
 			width: "52%",
 			height: "72%",
 		});

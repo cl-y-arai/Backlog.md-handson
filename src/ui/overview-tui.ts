@@ -1,5 +1,6 @@
 import { box } from "neo-neo-bblessed";
 import type { TaskStatistics } from "../core/statistics.ts";
+import { t, translateStatus } from "../i18n/index.ts";
 import { formatPriorityLabel } from "../utils/priority-config.ts";
 import { getStatusIcon } from "./status-icon.ts";
 import { createScreen, formatTuiTitle } from "./tui.ts";
@@ -20,7 +21,7 @@ function getPriorityBreakdownRows(statistics: TaskStatistics): Array<{ label: st
 			color: priorityColors[priority] ?? "white",
 		}));
 	if (statistics.noPriorityCount > 0) {
-		rows.push({ label: "No Priority", count: statistics.noPriorityCount, color: "gray" });
+		rows.push({ label: t("overview.noPriority"), count: statistics.noPriorityCount, color: "gray" });
 	}
 	return rows;
 }
@@ -36,7 +37,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 	}
 
 	return new Promise<void>((resolve) => {
-		const screen = createScreen({ title: formatTuiTitle("Overview", projectName) });
+		const screen = createScreen({ title: formatTuiTitle(t("title.overview"), projectName) });
 
 		// Main container
 		const container = box({
@@ -52,7 +53,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			left: "center",
 			width: "shrink",
 			height: 3,
-			content: `{center}{bold}${projectName} - Project Overview{/bold}{/center}`,
+			content: `{center}{bold}${t("overview.heading", { project: projectName })}{/bold}{/center}`,
 			tags: true,
 			style: {},
 		});
@@ -65,7 +66,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			width: "50%",
 			height: "40%",
 			border: { type: "line" },
-			label: " Status Overview ",
+			label: ` ${t("overview.statusOverview")} `,
 			style: {
 				border: { fg: "gray" },
 			},
@@ -81,12 +82,12 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 		for (const [status, count] of statistics.statusCounts) {
 			const icon = getStatusIcon(status);
 			const percentage = statistics.totalTasks > 0 ? Math.round((count / statistics.totalTasks) * 100) : 0;
-			statusContent += `  ${icon} {bold}${status}:{/bold} ${count} tasks (${percentage}%)\n`;
+			statusContent += `  ${icon} {bold}${translateStatus(status)}:{/bold} ${t("overview.taskCount", { count, percent: percentage })}\n`;
 		}
-		statusContent += `\n  {cyan-fg}Total Tasks:{/cyan-fg} ${statistics.totalTasks}\n`;
-		statusContent += `  {green-fg}Completion:{/green-fg} ${statistics.completionPercentage}%\n`;
+		statusContent += `\n  {cyan-fg}${t("overview.totalTasks")}{/cyan-fg} ${statistics.totalTasks}\n`;
+		statusContent += `  {green-fg}${t("overview.completion")}{/green-fg} ${statistics.completionPercentage}%\n`;
 		if (statistics.draftCount > 0) {
-			statusContent += `  {yellow-fg}Drafts:{/yellow-fg} ${statistics.draftCount}\n`;
+			statusContent += `  {yellow-fg}${t("overview.drafts")}{/yellow-fg} ${statistics.draftCount}\n`;
 		}
 		statusBox.setContent(statusContent);
 
@@ -98,7 +99,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			width: "50%",
 			height: "40%",
 			border: { type: "line" },
-			label: " Priority Breakdown ",
+			label: ` ${t("overview.priorityBreakdown")} `,
 			style: {
 				border: { fg: "gray" },
 			},
@@ -113,7 +114,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 		let priorityContent = "";
 		for (const { label, count, color } of getPriorityBreakdownRows(statistics)) {
 			const percentage = statistics.totalTasks > 0 ? Math.round((count / statistics.totalTasks) * 100) : 0;
-			priorityContent += `  {${color}-fg}${label}:{/${color}-fg} ${count} tasks (${percentage}%)\n`;
+			priorityContent += `  {${color}-fg}${label}:{/${color}-fg} ${t("overview.taskCount", { count, percent: percentage })}\n`;
 		}
 		priorityBox.setContent(priorityContent);
 
@@ -125,7 +126,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			width: "50%",
 			height: "28%",
 			border: { type: "line" },
-			label: " Recent Activity ",
+			label: ` ${t("overview.recentActivity")} `,
 			style: {
 				border: { fg: "gray" },
 			},
@@ -137,22 +138,22 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			mouse: true,
 		});
 
-		let activityContent = "{bold}Recently Created:{/bold}\n";
+		let activityContent = `{bold}${t("overview.recentlyCreated")}{/bold}\n`;
 		if (statistics.recentActivity.created.length > 0) {
 			for (const task of statistics.recentActivity.created) {
 				activityContent += `  ${task.id} - ${task.title.substring(0, 40)}${task.title.length > 40 ? "..." : ""}\n`;
 			}
 		} else {
-			activityContent += "  {gray-fg}No tasks created in the last 7 days{/gray-fg}\n";
+			activityContent += `  {gray-fg}${t("overview.noneCreated")}{/gray-fg}\n`;
 		}
 
-		activityContent += "\n{bold}Recently Updated:{/bold}\n";
+		activityContent += `\n{bold}${t("overview.recentlyUpdated")}{/bold}\n`;
 		if (statistics.recentActivity.updated.length > 0) {
 			for (const task of statistics.recentActivity.updated) {
 				activityContent += `  ${task.id} - ${task.title.substring(0, 40)}${task.title.length > 40 ? "..." : ""}\n`;
 			}
 		} else {
-			activityContent += "  {gray-fg}No tasks updated in the last 7 days{/gray-fg}\n";
+			activityContent += `  {gray-fg}${t("overview.noneUpdated")}{/gray-fg}\n`;
 		}
 		activityBox.setContent(activityContent);
 
@@ -164,7 +165,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			width: "50%",
 			height: "28%",
 			border: { type: "line" },
-			label: " Project Health ",
+			label: ` ${t("overview.projectHealth")} `,
 			style: {
 				border: { fg: "gray" },
 			},
@@ -176,24 +177,24 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			mouse: true,
 		});
 
-		let healthContent = `{bold}Average Task Age:{/bold} ${statistics.projectHealth.averageTaskAge} days\n\n`;
+		let healthContent = `{bold}${t("overview.averageAge")}{/bold} ${t("overview.days", { count: statistics.projectHealth.averageTaskAge })}\n\n`;
 
-		healthContent += "{bold}Stale Tasks:{/bold} {gray-fg}(>30 days without updates){/gray-fg}\n";
+		healthContent += `{bold}${t("overview.staleTasks")}{/bold} {gray-fg}${t("overview.staleHint")}{/gray-fg}\n`;
 		if (statistics.projectHealth.staleTasks.length > 0) {
 			for (const task of statistics.projectHealth.staleTasks) {
 				healthContent += `  {yellow-fg}${task.id}{/yellow-fg} - ${task.title.substring(0, 35)}${task.title.length > 35 ? "..." : ""}\n`;
 			}
 		} else {
-			healthContent += "  {green-fg}No stale tasks{/green-fg}\n";
+			healthContent += `  {green-fg}${t("overview.noStale")}{/green-fg}\n`;
 		}
 
-		healthContent += "\n{bold}Blocked Tasks:{/bold} {gray-fg}(waiting on dependencies){/gray-fg}\n";
+		healthContent += `\n{bold}${t("overview.blockedTasks")}{/bold} {gray-fg}${t("overview.blockedHint")}{/gray-fg}\n`;
 		if (statistics.projectHealth.blockedTasks.length > 0) {
 			for (const task of statistics.projectHealth.blockedTasks) {
 				healthContent += `  {red-fg}${task.id}{/red-fg} - ${task.title.substring(0, 35)}${task.title.length > 35 ? "..." : ""}\n`;
 			}
 		} else {
-			healthContent += "  {green-fg}No blocked tasks{/green-fg}\n";
+			healthContent += `  {green-fg}${t("overview.noBlocked")}{/green-fg}\n`;
 		}
 		healthBox.setContent(healthContent);
 
@@ -204,7 +205,7 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
 			left: 0,
 			width: "100%",
 			height: 3,
-			content: "{center}Press q or Esc to exit{/center}",
+			content: `{center}${t("overview.exitHint")}{/center}`,
 			tags: true,
 			style: {
 				fg: "gray",
@@ -228,63 +229,65 @@ export async function renderOverviewTui(statistics: TaskStatistics, projectName:
  * Render plain text overview for non-TTY environments
  */
 function renderPlainTextOverview(statistics: TaskStatistics, projectName: string): void {
-	console.log(`\n${projectName} - Project Overview\n${"=".repeat(40)}\n`);
+	console.log(`\n${t("overview.heading", { project: projectName })}\n${"=".repeat(40)}\n`);
 
-	console.log("Status Overview:");
+	console.log(`${t("overview.statusOverview")}:`);
 	for (const [status, count] of statistics.statusCounts) {
 		const percentage = statistics.totalTasks > 0 ? Math.round((count / statistics.totalTasks) * 100) : 0;
-		console.log(`  ${status}: ${count} tasks (${percentage}%)`);
+		console.log(`  ${translateStatus(status)}: ${t("overview.taskCount", { count, percent: percentage })}`);
 	}
-	console.log(`\n  Total Tasks: ${statistics.totalTasks}`);
-	console.log(`  Completion: ${statistics.completionPercentage}%`);
+	console.log(`\n  ${t("overview.totalTasks")} ${statistics.totalTasks}`);
+	console.log(`  ${t("overview.completion")} ${statistics.completionPercentage}%`);
 	if (statistics.draftCount > 0) {
-		console.log(`  Drafts: ${statistics.draftCount}`);
+		console.log(`  ${t("overview.drafts")} ${statistics.draftCount}`);
 	}
 
-	console.log("\nPriority Breakdown:");
+	console.log(`\n${t("overview.priorityBreakdown")}:`);
 	for (const { label, count } of getPriorityBreakdownRows(statistics)) {
 		const percentage = statistics.totalTasks > 0 ? Math.round((count / statistics.totalTasks) * 100) : 0;
-		console.log(`  ${label}: ${count} tasks (${percentage}%)`);
+		console.log(`  ${label}: ${t("overview.taskCount", { count, percent: percentage })}`);
 	}
 
-	console.log("\nRecent Activity:");
-	console.log("  Recently Created:");
+	console.log(`\n${t("overview.recentActivity")}:`);
+	console.log(`  ${t("overview.recentlyCreated")}`);
 	if (statistics.recentActivity.created.length > 0) {
 		for (const task of statistics.recentActivity.created) {
 			console.log(`    ${task.id} - ${task.title}`);
 		}
 	} else {
-		console.log("    No tasks created in the last 7 days");
+		console.log(`    ${t("overview.noneCreated")}`);
 	}
 
-	console.log("\n  Recently Updated:");
+	console.log(`\n  ${t("overview.recentlyUpdated")}`);
 	if (statistics.recentActivity.updated.length > 0) {
 		for (const task of statistics.recentActivity.updated) {
 			console.log(`    ${task.id} - ${task.title}`);
 		}
 	} else {
-		console.log("    No tasks updated in the last 7 days");
+		console.log(`    ${t("overview.noneUpdated")}`);
 	}
 
-	console.log("\nProject Health:");
-	console.log(`  Average Task Age: ${statistics.projectHealth.averageTaskAge} days`);
+	console.log(`\n${t("overview.projectHealth")}:`);
+	console.log(
+		`  ${t("overview.averageAge")} ${t("overview.days", { count: statistics.projectHealth.averageTaskAge })}`,
+	);
 
-	console.log("\n  Stale Tasks (>30 days without updates):");
+	console.log(`\n  ${t("overview.staleTasksPlain")}`);
 	if (statistics.projectHealth.staleTasks.length > 0) {
 		for (const task of statistics.projectHealth.staleTasks) {
 			console.log(`    ${task.id} - ${task.title}`);
 		}
 	} else {
-		console.log("    No stale tasks");
+		console.log(`    ${t("overview.noStale")}`);
 	}
 
-	console.log("\n  Blocked Tasks (waiting on dependencies):");
+	console.log(`\n  ${t("overview.blockedTasksPlain")}`);
 	if (statistics.projectHealth.blockedTasks.length > 0) {
 		for (const task of statistics.projectHealth.blockedTasks) {
 			console.log(`    ${task.id} - ${task.title}`);
 		}
 	} else {
-		console.log("    No blocked tasks");
+		console.log(`    ${t("overview.noBlocked")}`);
 	}
 	console.log("");
 }

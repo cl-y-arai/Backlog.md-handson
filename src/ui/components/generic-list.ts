@@ -6,6 +6,7 @@
 import { stdout as output } from "node:process";
 import type { ElementInterface, ListInterface, ScreenInterface } from "neo-neo-bblessed";
 import { list } from "neo-neo-bblessed";
+import { t } from "../../i18n/index.ts";
 import { formatHeading } from "../heading.ts";
 import { createScreen } from "../tui.ts";
 import { stripBlessedFgTags } from "../utils/strip-tags.ts";
@@ -214,7 +215,7 @@ export class GenericList<T extends GenericListItem> implements GenericListContro
 		let displayIndex = 0;
 
 		if (this.options.searchable && this.isSearchMode) {
-			displayItems.push(`{cyan-fg}Search: ${this.searchTerm}_{/}`);
+			displayItems.push(`{cyan-fg}${t("list.searchPrompt", { term: this.searchTerm })}{/}`);
 			displayIndex += 1;
 		}
 
@@ -234,7 +235,7 @@ export class GenericList<T extends GenericListItem> implements GenericListContro
 
 			// Render groups
 			for (const [group, groupItems] of groups) {
-				displayItems.push(formatHeading(group || "No Group", 2));
+				displayItems.push(formatHeading(group || t("list.noGroup"), 2));
 				displayIndex += 1;
 				for (const { item, filteredIndex } of groupItems) {
 					const content = this.buildDisplayContent(item, filteredIndex, true);
@@ -276,20 +277,20 @@ export class GenericList<T extends GenericListItem> implements GenericListContro
 	}
 
 	private buildHelpText(): string {
-		const parts = ["↑/↓ navigate"];
+		const parts = [t("list.navigate")];
 
 		if (this.isMultiSelect) {
-			parts.push("Space toggle");
-			parts.push("Enter confirm");
+			parts.push(t("list.toggle"));
+			parts.push(t("list.confirm"));
 		} else {
-			parts.push("Enter select");
+			parts.push(t("list.select"));
 		}
 
 		if (this.options.searchable) {
-			parts.push("/ search");
+			parts.push(t("list.search"));
 		}
 
-		parts.push("Esc/q quit");
+		parts.push(t("list.quit"));
 		return `{gray-fg}${parts.join(" · ")}{/gray-fg}`;
 	}
 
