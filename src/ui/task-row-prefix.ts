@@ -1,4 +1,5 @@
 import blessed from "neo-neo-bblessed";
+import { localizeStatus } from "../i18n/index.ts";
 import type { Task } from "../types/index.ts";
 import { formatAcceptanceCriteriaProgress } from "./acceptance-criteria-progress.ts";
 import { formatStatusWithIcon, getStatusColor, wrapStatusColor } from "./status-icon.ts";
@@ -34,7 +35,9 @@ export type TaskRowPrefix = (task: Task) => string;
  */
 export function createTaskRowPrefix(tasks: Task[], options: { showStatus: boolean }): TaskRowPrefix {
 	const status = (task: Task) =>
-		options.showStatus ? wrapStatusColor(formatStatusWithIcon(task.status), getStatusColor(task.status)) : "";
+		options.showStatus
+			? wrapStatusColor(formatStatusWithIcon(task.status, localizeStatus(task.status)), getStatusColor(task.status))
+			: "";
 	const statusWidth = widestSegment(tasks, status);
 	const progressWidth = widestSegment(tasks, formatAcceptanceCriteriaProgress);
 

@@ -20,6 +20,7 @@ import {
 	formatDateForDisplay,
 	formatTaskPlainText,
 } from "../formatters/task-plain-text.ts";
+import { localizeStatus, t } from "../i18n/index.ts";
 import type { LabelMatchMode, Milestone, Task } from "../types/index.ts";
 import { copyToClipboard } from "../utils/clipboard.ts";
 import { areLabelSelectionsEqual, collectAvailableLabels } from "../utils/label-filter.ts";
@@ -429,7 +430,7 @@ export async function viewTaskEnhanced(
 	let selectionRequestId = 0;
 	let noResultsMessage: string | null = null;
 
-	const screenTitle = formatTuiTitle(options.title || "Tasks", projectName);
+	const screenTitle = formatTuiTitle(options.title || t("tui.tasks"), projectName);
 	const screen = options.screen ?? createScreen({ title: screenTitle });
 
 	// Main container
@@ -676,7 +677,7 @@ export async function viewTaskEnhanced(
 		style: { border: { fg: "gray" } },
 		// Every task is listed until a filter or a limit narrows the list; applyFilters() then sets
 		// the count of the rows that are left.
-		label: `\u00A0Tasks (${allTasks.length})\u00A0`,
+		label: `\u00A0${t("tui.tasksPane", { count: String(allTasks.length) })}\u00A0`,
 	});
 
 	// Detail pane - use right: 0 to ensure it extends to window edge
@@ -688,7 +689,7 @@ export async function viewTaskEnhanced(
 		height: `100%-${getHeaderHeight() + 1}`,
 		border: { type: "line" },
 		style: { border: { fg: "gray" } },
-		label: "\u00A0Details\u00A0",
+		label: `\u00A0${t("tui.detailsPane")}\u00A0`,
 	});
 
 	// Help bar at bottom
@@ -838,7 +839,7 @@ export async function viewTaskEnhanced(
 
 		// Update the task list label
 		if (taskListPane.setLabel) {
-			taskListPane.setLabel(`\u00A0Tasks (${filteredTasks.length})\u00A0`);
+			taskListPane.setLabel(`\u00A0${t("tui.tasksPane", { count: String(filteredTasks.length) })}\u00A0`);
 		}
 
 		if (filteredTasks.length === 0) {
@@ -1601,7 +1602,7 @@ export function generateDetailContent(
 ): { headerContent: string[]; bodyContent: string[] } {
 	const { resolveMilestoneLabel, dateFormat, configuredProjects, configuredPriorities } = options;
 	const headerContent = [
-		` ${wrapStatusColor(formatStatusWithIcon(task.status), getStatusColor(task.status))} {bold}{blue-fg}${task.id}{/blue-fg}{/bold} - ${task.title}`,
+		` ${wrapStatusColor(formatStatusWithIcon(task.status, localizeStatus(task.status)), getStatusColor(task.status))} {bold}{blue-fg}${task.id}{/blue-fg}{/bold} - ${task.title}`,
 	];
 
 	// Add cross-branch indicator if task is from another branch

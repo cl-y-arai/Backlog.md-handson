@@ -23,6 +23,10 @@ export const ja: Record<MessageKey, string> = {
 	"taskList.noTasks": "タスクが見つかりません。",
 	"taskList.noChildTasks": "親タスク {parentId} の子タスクが見つかりません。",
 
+	"tui.tasks": "タスク",
+	"tui.tasksPane": "タスク ({count})",
+	"tui.detailsPane": "詳細",
+
 	"status.To Do": "未着手",
 	"status.In Progress": "進行中",
 	"status.Done": "完了",

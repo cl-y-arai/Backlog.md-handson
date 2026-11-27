@@ -2813,7 +2813,7 @@ async function runTaskList(
 	}
 
 	let filterDescription = "";
-	let title = "Tasks";
+	let title = t("tui.tasks");
 	const activeFilters: string[] = [];
 	if (options.status) activeFilters.push(`Status: ${options.status}`);
 	if (baseFilters.excludeStatus) {
@@ -2843,7 +2843,7 @@ async function runTaskList(
 
 	if (activeFilters.length > 0) {
 		filterDescription = activeFilters.join(", ");
-		title = `Tasks (${activeFilters.join(" • ")})`;
+		title = `${t("tui.tasks")} (${activeFilters.join(" • ")})`;
 	}
 	const initialUnifiedFilter: {
 		status?: string | string[];

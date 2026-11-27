@@ -7,6 +7,7 @@ import {
 	generateMilestoneGroupedBoard,
 } from "../board.ts";
 import { type Core, createRuntimeCore } from "../core/backlog.ts";
+import { localizeStatus, t } from "../i18n/index.ts";
 import type { LabelMatchMode, Milestone, Task, TaskCreateInput } from "../types/index.ts";
 import { copyToClipboard } from "../utils/clipboard.ts";
 import { areLabelSelectionsEqual, collectAvailableLabels } from "../utils/label-filter.ts";
@@ -202,7 +203,7 @@ function buildRenderedTaskListItems(
 }
 
 function formatColumnLabel(status: string, count: number): string {
-	return `\u00A0${getStatusIcon(status)} ${status || "No Status"} (${count})\u00A0`;
+	return `\u00A0${getStatusIcon(status)} ${status ? localizeStatus(status) : t("taskList.noStatus")} (${count})\u00A0`;
 }
 
 /**

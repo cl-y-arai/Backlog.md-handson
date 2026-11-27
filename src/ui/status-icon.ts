@@ -55,7 +55,8 @@ export function wrapStatusColor(text: string, color: string): string {
  * @param status - The task status
  * @returns The formatted status string with icon
  */
-export function formatStatusWithIcon(status: string): string {
+/** `label` replaces the displayed status text; the icon is always chosen from the stored status. */
+export function formatStatusWithIcon(status: string, label = status): string {
 	const style = getStatusStyle(status);
-	return `${style.icon} ${status}`;
+	return `${style.icon} ${label}`;
 }

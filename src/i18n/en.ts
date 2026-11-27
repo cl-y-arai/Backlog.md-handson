@@ -20,6 +20,10 @@ export const en = {
 	"taskList.noTasks": "No tasks found.",
 	"taskList.noChildTasks": "No child tasks found for parent task {parentId}.",
 
+	"tui.tasks": "Tasks",
+	"tui.tasksPane": "Tasks ({count})",
+	"tui.detailsPane": "Details",
+
 	"status.To Do": "To Do",
 	"status.In Progress": "In Progress",
 	"status.Done": "Done",
