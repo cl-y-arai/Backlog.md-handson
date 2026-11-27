@@ -13,6 +13,29 @@ export function getLocale(): Locale {
 	return currentLocale;
 }
 
+// A language the viewer picked in the header overrides the server's BACKLOG_LANG in this browser.
+const SAVED_LOCALE_KEY = "backlog-locale";
+
+export function getSavedLocale(): Locale | null {
+	try {
+		const saved = window.localStorage.getItem(SAVED_LOCALE_KEY);
+		return saved ? parseLocale(saved) : null;
+	} catch {
+		return null;
+	}
+}
+
+/** Saves the viewer's choice and reloads, so every label is rendered again in that language. */
+export function switchLocale(next: Locale): void {
+	try {
+		window.localStorage.setItem(SAVED_LOCALE_KEY, next);
+	} catch {
+		// Without storage the choice lasts only until the next reload.
+	}
+	setLocale(next);
+	window.location.reload();
+}
+
 /** Browser UI message for the current locale, replacing `{name}` placeholders with `params.name`. */
 export function t(key: WebMessageKey, params?: Record<string, string | number>): string {
 	return formatMessage(webMessages[currentLocale][key], params);

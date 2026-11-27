@@ -1,6 +1,7 @@
 import React from 'react';
 import { BranchIndexingIndicator } from './BranchIndexingIndicator';
 import ThemeToggle from './ThemeToggle';
+import LanguageToggle from './LanguageToggle';
 import { t } from '../i18n';
 
 interface NavigationProps {
@@ -31,6 +32,7 @@ const Navigation: React.FC<NavigationProps> = ({projectName, loadingMessage}) =>
                 </div>
                 <div className="flex items-center gap-3">
                     <BranchIndexingIndicator message={loadingMessage} />
+                    <LanguageToggle />
                     <ThemeToggle />
                 </div>
             </div>
