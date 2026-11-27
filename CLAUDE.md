@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Read first
 
-- Read [AGENTS.md](AGENTS.md) as well. It holds the full agent working agreement; this file summarizes it.
+- @AGENTS.md is imported below. It holds the full agent working agreement and wins over this summary if they differ.
 - Read [MANIFESTO.md](MANIFESTO.md) before architecture or product decisions. It is the project's constitution
   (humans and agents are both first-class users; Markdown is the source of truth; the CLI is canonical). If a request
   conflicts with it, surface the conflict and ask instead of proceeding. Do not edit it as a side effect.

@@ -6,6 +6,9 @@ export const BACKLOG_LANG_ENV = "BACKLOG_LANG";
 
 export type Language = "en" | "ja";
 
+/** Values substituted for `{name}` placeholders in a message. */
+export type MessageParams = Record<string, string | number>;
+
 const messages: Record<Language, Record<MessageKey, string>> = { en, ja };
 
 /**
@@ -17,9 +20,16 @@ export function resolveLanguage(env: NodeJS.ProcessEnv = process.env): Language 
 	return value === "ja" ? "ja" : "en";
 }
 
-/** 現在の表示言語でメッセージを返す。言語は呼び出しごとに環境変数から読む。 */
-export function t(key: MessageKey, language: Language = resolveLanguage()): string {
-	return messages[language][key];
+/**
+ * 現在の表示言語でメッセージを返す。言語は呼び出しごとに環境変数から読む。
+ * `{name}` は params の値で置き換える。params に無いプレースホルダはそのまま残す。
+ */
+export function t(key: MessageKey, params?: MessageParams, language: Language = resolveLanguage()): string {
+	const template = messages[language][key];
+	if (!params) return template;
+	return template.replace(/\{(\w+)\}/g, (placeholder, name: string) =>
+		Object.hasOwn(params, name) ? String(params[name]) : placeholder,
+	);
 }
 
 /**
@@ -29,5 +39,5 @@ export function t(key: MessageKey, language: Language = resolveLanguage()): stri
  */
 export function translateStatus(status: string, language: Language = resolveLanguage()): string {
 	const key = `status.${status}`;
-	return Object.hasOwn(en, key) ? t(key as MessageKey, language) : status;
+	return Object.hasOwn(en, key) ? t(key as MessageKey, undefined, language) : status;
 }

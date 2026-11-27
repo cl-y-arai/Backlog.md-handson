@@ -4,6 +4,7 @@
 
 import type { Core } from "../core/backlog.ts";
 import { findLocalDuplicateTaskIds } from "../core/duplicate-task-repair.ts";
+import { t } from "../i18n/index.ts";
 import type { LabelMatchMode, Milestone, Task, TaskCreateInput } from "../types/index.ts";
 import { watchConfig } from "../utils/config-watcher.ts";
 import { formatDuplicateTaskIdSummary } from "../utils/duplicate-detection.ts";
@@ -211,7 +212,7 @@ export async function loadTasksForUnifiedView(
 		});
 
 	const loadingScreenFactory = options.loadingScreenFactory || createLoadingScreen;
-	const loadingScreen = await loadingScreenFactory("Loading tasks");
+	const loadingScreen = await loadingScreenFactory(t("loading.tasks"));
 
 	try {
 		const result = await loader((message) => {
@@ -236,8 +237,8 @@ export async function getDuplicateTaskStartupWarning(core: Core): Promise<string
 type ViewResult = "switch" | "exit";
 
 export function getEmptyUnifiedViewMessage(initialView: ViewType, parentTaskId?: string): string | null {
-	if (parentTaskId) return `No child tasks found for parent task ${parentTaskId}.`;
-	return initialView === "kanban" ? null : "No tasks found.";
+	if (parentTaskId) return t("taskList.noChildTasks", { id: parentTaskId });
+	return initialView === "kanban" ? null : t("taskList.noTasks");
 }
 
 export async function createTaskFromBoard(
@@ -361,7 +362,7 @@ export async function runUnifiedView(options: UnifiedViewOptions): Promise<void>
 			const availableTasks = tasks.filter((t) => t.id && t.id.trim() !== "" && hasAnyPrefix(t.id));
 
 			if (availableTasks.length === 0) {
-				console.log("No tasks available.");
+				console.log(t("tui.noTasksAvailable"));
 				return "exit";
 			}
 
@@ -371,7 +372,7 @@ export async function runUnifiedView(options: UnifiedViewOptions): Promise<void>
 			const taskToView = chosenTask ?? availableTasks[0];
 
 			if (!taskToView) {
-				console.log("No task selected.");
+				console.log(t("tui.noTaskSelected"));
 				return "exit";
 			}
 

@@ -98,6 +98,29 @@ describe("CLI display language", () => {
 		expect(output).not.toContain(en["help.overview"]);
 	});
 
+	it("gives every top-level command a help description in both languages", async () => {
+		for (const language of [undefined, "ja"]) {
+			const result = await $`bun ${CLI_PATH} --help`.cwd(testDir).env(envWithLanguage(language)).quiet();
+			const commandsSection = result.stdout.toString().split("Commands:\n")[1] ?? "";
+			// コマンド行は2スペースで始まり、名前・引数の後に2つ以上の空白を挟んで説明が続く
+			const commandRows = commandsSection.split("\n").filter((line) => /^ {2}\S/.test(line));
+			expect(commandRows.length).toBeGreaterThan(0);
+			const withoutDescription = commandRows.filter((line) => line.trim().split(/\s{2,}/).length < 2);
+			expect(withoutDescription).toEqual([]);
+		}
+		const japanese = await $`bun ${CLI_PATH} --help`.cwd(testDir).env(envWithLanguage("ja")).quiet();
+		expect(japanese.stdout.toString()).toContain(ja["help.board"]);
+	});
+
+	it("shows the empty task list message in Japanese with BACKLOG_LANG=ja", async () => {
+		const result = await $`bun ${CLI_PATH} task list --plain --search no-such-task-text`
+			.cwd(testDir)
+			.env(envWithLanguage("ja"))
+			.quiet();
+		expect(result.exitCode).toBe(0);
+		expect(result.stdout.toString()).toContain(ja["taskList.noTasks"]);
+	});
+
 	it("shows Japanese status headings in plain task list output with BACKLOG_LANG=ja", async () => {
 		const english = await $`bun ${CLI_PATH} task list --plain`.cwd(testDir).env(envWithLanguage(undefined)).quiet();
 		expect(english.stdout.toString()).toContain("To Do:");

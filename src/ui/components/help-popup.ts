@@ -1,4 +1,7 @@
 import type { ScreenInterface } from "neo-neo-bblessed";
+import type { MessageKey } from "../../i18n/en.ts";
+import { t } from "../../i18n/index.ts";
+import { footerLine, keyHint } from "../footer-content.ts";
 import { createPopupChrome, createScrollableViewport } from "./filter-popup.ts";
 
 export type HelpPopupContext = "board" | "task-list";
@@ -8,53 +11,59 @@ type Shortcut = {
 	desc: string;
 };
 
+type ShortcutDefinition = {
+	key: string;
+	descKey: MessageKey;
+};
+
 // Letters are uppercase key indicators, matching the footer: `T` means "press the T key",
 // not Shift+T. The bound key is the lowercase letter.
-const BOARD_SHORTCUTS: Shortcut[] = [
-	{ key: "Tab", desc: "Switch View (Kanban/List)" },
-	{ key: "N", desc: "Create a task" },
-	{ key: "/", desc: "Search tasks" },
-	{ key: "T", desc: "Filter by Type" },
-	{ key: "V", desc: "Filter by Project" },
-	{ key: "P", desc: "Filter by Priority" },
-	{ key: "I", desc: "Filter by Milestone" },
-	{ key: "F", desc: "Filter by Labels" },
-	{ key: "←→", desc: "Navigate columns" },
-	{ key: "↑↓", desc: "Navigate tasks" },
-	{ key: "Enter", desc: "View task details" },
-	{ key: "E", desc: "Edit task" },
-	{ key: "M", desc: "Move tasks (Shift+M selects more in move mode)" },
-	{ key: "A", desc: "Archive task" },
-	{ key: "Y", desc: "Yank (Copy) task ID" },
-	{ key: "H", desc: "Hide/show empty columns" },
-	{ key: "?", desc: "Show this help menu" },
-	{ key: "q/Esc", desc: "Quit / Close" },
+const BOARD_SHORTCUTS: ShortcutDefinition[] = [
+	{ key: "Tab", descKey: "shortcut.switchView" },
+	{ key: "N", descKey: "shortcut.createTask" },
+	{ key: "/", descKey: "shortcut.searchTasks" },
+	{ key: "T", descKey: "shortcut.filterType" },
+	{ key: "V", descKey: "shortcut.filterProject" },
+	{ key: "P", descKey: "shortcut.filterPriority" },
+	{ key: "I", descKey: "shortcut.filterMilestone" },
+	{ key: "F", descKey: "shortcut.filterLabels" },
+	{ key: "←→", descKey: "shortcut.navigateColumns" },
+	{ key: "↑↓", descKey: "shortcut.navigateTasks" },
+	{ key: "Enter", descKey: "shortcut.viewDetails" },
+	{ key: "E", descKey: "shortcut.editTask" },
+	{ key: "M", descKey: "shortcut.moveTasks" },
+	{ key: "A", descKey: "shortcut.archiveTask" },
+	{ key: "Y", descKey: "shortcut.yankId" },
+	{ key: "H", descKey: "shortcut.toggleEmptyColumns" },
+	{ key: "?", descKey: "shortcut.showHelp" },
+	{ key: "q/Esc", descKey: "shortcut.quit" },
 ];
 
-const TASK_LIST_SHORTCUTS: Shortcut[] = [
-	{ key: "Tab", desc: "Switch View (Kanban/List)" },
-	{ key: "/", desc: "Search tasks" },
-	{ key: "S", desc: "Filter by Status" },
-	{ key: "T", desc: "Filter by Type" },
-	{ key: "V", desc: "Filter by Project" },
-	{ key: "P", desc: "Filter by Priority" },
-	{ key: "I", desc: "Filter by Milestone" },
-	{ key: "L", desc: "Filter by Labels" },
-	{ key: "↑↓", desc: "Navigate tasks" },
-	{ key: "←→", desc: "Switch between list and details" },
-	{ key: "Enter", desc: "Focus task details" },
-	{ key: "E", desc: "Edit task" },
-	{ key: "A", desc: "Archive task" },
-	{ key: "Y", desc: "Yank (Copy) task ID" },
-	{ key: "?", desc: "Show this help menu" },
-	{ key: "q/Esc", desc: "Quit / Close" },
+const TASK_LIST_SHORTCUTS: ShortcutDefinition[] = [
+	{ key: "Tab", descKey: "shortcut.switchView" },
+	{ key: "/", descKey: "shortcut.searchTasks" },
+	{ key: "S", descKey: "shortcut.filterStatus" },
+	{ key: "T", descKey: "shortcut.filterType" },
+	{ key: "V", descKey: "shortcut.filterProject" },
+	{ key: "P", descKey: "shortcut.filterPriority" },
+	{ key: "I", descKey: "shortcut.filterMilestone" },
+	{ key: "L", descKey: "shortcut.filterLabels" },
+	{ key: "↑↓", descKey: "shortcut.navigateTasks" },
+	{ key: "←→", descKey: "shortcut.switchListDetails" },
+	{ key: "Enter", descKey: "shortcut.focusDetails" },
+	{ key: "E", descKey: "shortcut.editTask" },
+	{ key: "A", descKey: "shortcut.archiveTask" },
+	{ key: "Y", descKey: "shortcut.yankId" },
+	{ key: "?", descKey: "shortcut.showHelp" },
+	{ key: "q/Esc", descKey: "shortcut.quit" },
 ];
 
 export function getHelpShortcuts(
 	context: HelpPopupContext = "board",
 	options: { hasProjects?: boolean } = {},
 ): Shortcut[] {
-	const shortcuts = context === "task-list" ? TASK_LIST_SHORTCUTS : BOARD_SHORTCUTS;
+	const definitions = context === "task-list" ? TASK_LIST_SHORTCUTS : BOARD_SHORTCUTS;
+	const shortcuts = definitions.map(({ key, descKey }) => ({ key, desc: t(descKey) }));
 	return options.hasProjects ? shortcuts : shortcuts.filter((shortcut) => shortcut.key !== "V");
 }
 
@@ -63,7 +72,8 @@ const HELP_POPUP_CHROME_ROWS = 4;
 const HELP_POPUP_WIDTH = 60;
 
 function getHelpText(scrolls: boolean): string {
-	return scrolls ? " {cyan-fg}[↑↓]{/} Scroll | {cyan-fg}[Esc/q]{/} Close Help" : " {cyan-fg}[Esc/q]{/} Close Help";
+	const close = keyHint("Esc/q", t("key.closeHelp"));
+	return scrolls ? footerLine(keyHint("↑↓", t("key.scroll")), close) : footerLine(close);
 }
 
 export function getHelpPopupHeight(shortcutCount: number, screenHeight: number): number {
@@ -83,7 +93,7 @@ export async function openHelpPopup(
 		let popupHeight = getHelpPopupHeight(shortcuts.length, screen.height);
 		const { popup, close, reflow } = createPopupChrome({
 			screen,
-			title: "Keyboard Shortcuts",
+			title: t("shortcut.title"),
 			helpText: getHelpText(false),
 			width: HELP_POPUP_WIDTH,
 			height: popupHeight,

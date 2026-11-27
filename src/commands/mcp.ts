@@ -7,6 +7,7 @@
 
 import type { Command } from "commander";
 import { isConfigValueError } from "../file-system/operations.ts";
+import { t } from "../i18n/index.ts";
 import { createMcpServer } from "../mcp/server.ts";
 import { findBacklogRoot } from "../utils/find-backlog-root.ts";
 import { resolveRuntimeCwd } from "../utils/runtime-cwd.ts";
@@ -22,7 +23,7 @@ type StartOptions = {
  * @param program - Commander program instance
  */
 export function registerMcpCommand(program: Command): void {
-	const mcpCmd = program.command("mcp");
+	const mcpCmd = program.command("mcp").description(t("help.mcp"));
 	registerStartCommand(mcpCmd);
 }
 

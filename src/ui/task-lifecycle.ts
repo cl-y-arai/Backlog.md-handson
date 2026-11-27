@@ -1,15 +1,17 @@
 import type { Core } from "../core/backlog.ts";
+import { t } from "../i18n/index.ts";
 import { isReadOnlyTask, type Task } from "../types/index.ts";
 import { taskNotFoundMessage } from "../utils/task-path.ts";
 
 /** The archive confirmation every TUI view shows. Three short lines, to fit the confirm popup. */
 export function formatArchiveConfirmation(taskId: string): string {
-	return `Archive {bold}${taskId}{/bold}?\nMoves it off the board and keeps\nits ID, record, and links.`;
+	return t("archive.confirm", { id: `{bold}${taskId}{/bold}` });
 }
 
 /** The footer line every TUI view shows when a key would change a read-only task. */
 export function formatReadOnlyNotice(task: Task): string {
-	return ` {red-fg}Task is read-only${task.branch ? ` in branch ${task.branch}` : ""}.{/}`;
+	const notice = task.branch ? t("readOnly.taskInBranch", { branch: task.branch }) : t("readOnly.task");
+	return ` {red-fg}${notice}{/}`;
 }
 
 export interface TuiArchiveResult {
@@ -30,7 +32,7 @@ export async function archiveTaskFromTui(
 	confirm: (popup: { title: string; message: string }) => Promise<boolean>,
 ): Promise<TuiArchiveResult> {
 	if (isReadOnlyTask(task)) return { archived: false, reason: "read_only" };
-	if (!(await confirm({ title: "Archive Task", message: formatArchiveConfirmation(task.id) }))) {
+	if (!(await confirm({ title: t("archive.title"), message: formatArchiveConfirmation(task.id) }))) {
 		return { archived: false, reason: "cancelled" };
 	}
 	try {
@@ -43,11 +45,11 @@ export async function archiveTaskFromTui(
 
 /** The footer line for the outcome of the archive key, or null when the user said no. */
 export function formatArchiveNotice(task: Task, result: TuiArchiveResult): string | null {
-	if (result.archived) return ` {green-fg}Archived ${task.id}{/}`;
+	if (result.archived) return ` {green-fg}${t("archive.done", { id: task.id })}{/}`;
 	if (result.reason === "read_only") return formatReadOnlyNotice(task);
 	if (result.reason === "cancelled") return null;
 	// Core refused or failed after the view's snapshot went stale, so its own reason is shown.
 	return result.error
-		? ` {red-fg}Error archiving task: ${result.error}{/}`
+		? ` {red-fg}${t("archive.error", { error: result.error })}{/}`
 		: ` {red-fg}${taskNotFoundMessage(task.id)}{/}`;
 }

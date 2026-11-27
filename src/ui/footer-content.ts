@@ -1,3 +1,5 @@
+import { t } from "../i18n/index.ts";
+
 /**
  * Footer shortcut hints for the two task views.
  *
@@ -12,18 +14,66 @@ function filterKeys(before: string[], after: string[], hasProjects: boolean): st
 	return [...before, ...(hasProjects ? ["V"] : []), ...after].join("/");
 }
 
+/** One footer hint: the key in cyan brackets followed by its (translated) label. */
+export function keyHint(key: string, label: string): string {
+	return `{cyan-fg}[${key}]{/} ${label}`;
+}
+
+/** Footer hints joined with " | " behind a leading space, the shape formatFooterContent splits on. */
+export function footerLine(...segments: string[]): string {
+	return ` ${segments.join(" | ")}`;
+}
+
 export function getBoardFooterContent(options: { hasProjects?: boolean } = {}): string {
 	const keys = filterKeys(["T"], ["P", "I", "F"], options.hasProjects ?? false);
-	return ` {cyan-fg}[Tab]{/} View | {cyan-fg}[N]{/} New | {cyan-fg}[/]{/} Search | {cyan-fg}[${keys}]{/} Filter | {cyan-fg}[←→/↑↓]{/} Nav | {cyan-fg}[Enter]{/} Details | {cyan-fg}[E/M/A]{/} Edit/Move/Arch | {cyan-fg}[Y]{/} Yank | {cyan-fg}[?]{/} Help | {cyan-fg}[q]{/} Quit`;
+	return footerLine(
+		keyHint("Tab", t("key.view")),
+		keyHint("N", t("key.new")),
+		keyHint("/", t("key.search")),
+		keyHint(keys, t("key.filter")),
+		keyHint("←→/↑↓", t("key.nav")),
+		keyHint("Enter", t("key.details")),
+		keyHint("E/M/A", t("key.editMoveArchive")),
+		keyHint("Y", t("key.yank")),
+		keyHint("?", t("key.help")),
+		keyHint("q", t("key.quit")),
+	);
 }
 
 export function getTaskListFooterContent(options: { hasProjects?: boolean } = {}): string {
 	const keys = filterKeys(["S", "T"], ["P", "I", "L"], options.hasProjects ?? false);
-	return ` {cyan-fg}[Tab]{/} View | {cyan-fg}[/]{/} Search | {cyan-fg}[${keys}]{/} Filter | {cyan-fg}[↑↓]{/} Nav | {cyan-fg}[E/A]{/} Edit/Arch | {cyan-fg}[Y]{/} Yank | {cyan-fg}[?]{/} Help | {cyan-fg}[q]{/} Quit`;
+	return footerLine(
+		keyHint("Tab", t("key.view")),
+		keyHint("/", t("key.search")),
+		keyHint(keys, t("key.filter")),
+		keyHint("↑↓", t("key.nav")),
+		keyHint("E/A", t("key.editArchive")),
+		keyHint("Y", t("key.yank")),
+		keyHint("?", t("key.help")),
+		keyHint("q", t("key.quit")),
+	);
 }
 
+/** Hints shown while the filter header has focus; the search box gets its own cursor hints. */
+export function getFilterFooterContent(focus: "search" | "control", context: "board" | "task-list"): string {
+	if (focus === "search") {
+		return footerLine(
+			keyHint("←/→", t("key.cursorEdge")),
+			keyHint("↑/↓", t(context === "board" ? "key.backToBoard" : "key.backToTasks")),
+			keyHint("Esc", t("key.cancel")),
+			`{gray-fg}${t("key.liveSearch")}{/}`,
+		);
+	}
+	return footerLine(
+		keyHint("Enter/Space", t("key.openPicker")),
+		keyHint("←/→", t("key.prevNext")),
+		keyHint("Esc", t("key.back")),
+	);
+}
+
+// 全角文字は端末上で2桁使うため、文字数ではなく表示幅で測る
 function visibleLength(value: string): number {
-	return value.replace(/\{[^{}]+\}/g, "").length;
+	return Bun.stringWidth(value.replace(/\{[^{}]+\}/g, ""));
 }
 
 function joinSegments(segments: string[], leadingSpace: boolean): string {

@@ -1,5 +1,7 @@
 import type { ScreenInterface } from "neo-neo-bblessed";
 import { box } from "neo-neo-bblessed";
+import { t } from "../../i18n/index.ts";
+import { footerLine, keyHint } from "../footer-content.ts";
 import { createPopupChrome } from "./filter-popup.ts";
 
 export async function openConfirmPopup(options: {
@@ -14,7 +16,7 @@ export async function openConfirmPopup(options: {
 		const { popup, close } = createPopupChrome({
 			screen: options.screen,
 			title: options.title,
-			helpText: " {cyan-fg}[Enter/y]{/} Yes | {cyan-fg}[Esc/n]{/} No",
+			helpText: footerLine(keyHint("Enter/y", t("key.yes")), keyHint("Esc/n", t("key.no"))),
 			width: 40,
 			height: 10,
 		});

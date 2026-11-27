@@ -7,14 +7,11 @@ import {
 	generateMilestoneGroupedBoard,
 } from "../board.ts";
 import { type Core, createRuntimeCore } from "../core/backlog.ts";
+import { t, translateStatus } from "../i18n/index.ts";
 import type { LabelMatchMode, Milestone, Task, TaskCreateInput } from "../types/index.ts";
 import { copyToClipboard } from "../utils/clipboard.ts";
 import { areLabelSelectionsEqual, collectAvailableLabels } from "../utils/label-filter.ts";
-import {
-	createMilestoneFilterValueResolver,
-	NO_MILESTONE_FILTER_LABEL,
-	NO_MILESTONE_FILTER_VALUE,
-} from "../utils/milestone-filter.ts";
+import { createMilestoneFilterValueResolver, NO_MILESTONE_FILTER_VALUE } from "../utils/milestone-filter.ts";
 import { getPriorityOptions } from "../utils/priority-config.ts";
 import { getProjectValues, resolveProjectValues } from "../utils/project-config.ts";
 import { applyTaskFilters, createTaskSearchIndex } from "../utils/task-search.ts";
@@ -28,7 +25,13 @@ import { openMultiSelectFilterPopup, openSingleSelectFilterPopup } from "./compo
 import type { BoundaryNavigationKey } from "./components/generic-list.ts";
 import { openHelpPopup } from "./components/help-popup.ts";
 import { openTaskComposer, type TaskComposerOptions } from "./components/task-composer.ts";
-import { formatFooterContent, getBoardFooterContent } from "./footer-content.ts";
+import {
+	footerLine,
+	formatFooterContent,
+	getBoardFooterContent,
+	getFilterFooterContent,
+	keyHint,
+} from "./footer-content.ts";
 import { formatProjectBadge } from "./project.ts";
 import { getStatusIcon } from "./status-icon.ts";
 import { archiveTaskFromTui, formatArchiveNotice, formatReadOnlyNotice } from "./task-lifecycle.ts";
@@ -163,7 +166,9 @@ export function formatTaskListItem(
 		? ` {cyan-fg}${task.assignee[0].startsWith("@") ? task.assignee[0] : `@${task.assignee[0]}`}{/}`
 		: "";
 	const labels = task.labels?.length ? ` {yellow-fg}[${task.labels.join(", ")}]{/}` : "";
-	const dueDate = task.dueDate ? ` {gray-fg}(due ${formatUtcDateForDisplay(task.dueDate, { dateFormat })}){/}` : "";
+	const dueDate = task.dueDate
+		? ` {gray-fg}${t("tui.due", { date: formatUtcDateForDisplay(task.dueDate, { dateFormat }) })}{/}`
+		: "";
 	const typeBadge = formatTaskTypeBadge(task.type);
 	const type = typeBadge ? ` ${typeBadge}` : "";
 	const projectBadge = formatProjectBadge(task.project, configuredProjects);
@@ -201,8 +206,12 @@ function buildRenderedTaskListItems(
 	};
 }
 
+/** Column status used when the board has no configured statuses to show. */
+const NO_STATUS_COLUMN = "No Status";
+
 function formatColumnLabel(status: string, count: number): string {
-	return `\u00A0${getStatusIcon(status)} ${status || "No Status"} (${count})\u00A0`;
+	const name = !status || status === NO_STATUS_COLUMN ? t("taskList.noStatus") : translateStatus(status);
+	return `\u00A0${getStatusIcon(status)} ${t("tui.columnLabel", { status: name, count })}\u00A0`;
 }
 
 /**
@@ -262,17 +271,17 @@ export function getCreatedTaskBoardOutcome(
 ): { focusTaskId?: string; message: string; tone: "green" | "yellow" } {
 	if (task.status.trim().toLowerCase() === "draft") {
 		return {
-			message: `Created ${task.id} as a draft. Drafts are not shown on the task board.`,
+			message: t("tui.createdDraft", { id: task.id }),
 			tone: "yellow",
 		};
 	}
 	if (!visible) {
 		return {
-			message: `Created ${task.id}, but it is hidden by the current board filters.`,
+			message: t("tui.createdHidden", { id: task.id }),
 			tone: "yellow",
 		};
 	}
-	return { focusTaskId: task.id, message: `Created ${task.id}.`, tone: "green" };
+	return { focusTaskId: task.id, message: t("tui.created", { id: task.id }), tone: "green" };
 }
 
 /**
@@ -351,12 +360,12 @@ export async function renderBoardTui(
 
 	const initialColumns = prepareBoardColumns(initialTasks, statuses);
 	if (initialColumns.length === 0) {
-		console.log("No tasks available for the Kanban board.");
+		console.log(t("tui.noBoardTasks"));
 		return;
 	}
 
 	await new Promise<void>((resolve) => {
-		const screen = options?.screen ?? createScreen({ title: formatTuiTitle("Board", options?.projectName) });
+		const screen = options?.screen ?? createScreen({ title: formatTuiTitle(t("title.board"), options?.projectName) });
 		const container = box({
 			parent: screen,
 			width: "100%",
@@ -904,7 +913,7 @@ export async function renderBoardTui(
 				if (filterId === "type") {
 					const nextTypes = await openMultiSelectFilterPopup({
 						screen,
-						title: "Task Type Filter",
+						title: t("filter.typeTitle"),
 						items: configuredTaskTypes,
 						selectedItems: sharedFilters.typeFilter,
 					});
@@ -920,7 +929,7 @@ export async function renderBoardTui(
 				if (filterId === "project") {
 					const nextProjects = await openMultiSelectFilterPopup({
 						screen,
-						title: "Project Filter",
+						title: t("filter.projectTitle"),
 						items: configuredProjects,
 						selectedItems: sharedFilters.projectFilter,
 					});
@@ -936,7 +945,7 @@ export async function renderBoardTui(
 				if (filterId === "labels") {
 					const nextLabels = await openMultiSelectFilterPopup({
 						screen,
-						title: "Label Filter",
+						title: t("filter.labelTitle"),
 						items: [...configuredLabels].sort((a, b) => a.localeCompare(b)),
 						selectedItems: sharedFilters.labelFilter,
 					});
@@ -953,7 +962,7 @@ export async function renderBoardTui(
 				if (filterId === "priority") {
 					const selected = await openSingleSelectFilterPopup({
 						screen,
-						title: "Priority Filter",
+						title: t("filter.priorityTitle"),
 						selectedValue: sharedFilters.priorityFilter,
 						choices: [
 							{ label: "All", value: "" },
@@ -971,11 +980,11 @@ export async function renderBoardTui(
 
 				const selected = await openSingleSelectFilterPopup({
 					screen,
-					title: "Milestone Filter",
+					title: t("filter.milestoneTitle"),
 					selectedValue: sharedFilters.milestoneFilter,
 					choices: [
 						{ label: "All", value: "" },
-						{ label: NO_MILESTONE_FILTER_LABEL, value: NO_MILESTONE_FILTER_VALUE },
+						{ label: t("filter.noMilestone"), value: NO_MILESTONE_FILTER_VALUE },
 						...availableMilestones.map((value) => ({ label: value, value })),
 					],
 				});
@@ -1068,25 +1077,29 @@ export async function renderBoardTui(
 			if (currentFocus === "filters") {
 				const filterFocus = filterHeader?.getCurrentFocus();
 				if (filterFocus === "search") {
-					setFooterContent(
-						" {cyan-fg}[←/→]{/} Cursor (edge=Prev/Next) | {cyan-fg}[↑/↓]{/} Back to Board | {cyan-fg}[Esc]{/} Cancel | {gray-fg}(Live search){/}",
-					);
+					setFooterContent(getFilterFooterContent("search", "board"));
 					syncBoardAreaLayout();
 					return;
 				}
-				setFooterContent(
-					" {cyan-fg}[Enter/Space]{/} Open Picker | {cyan-fg}[←/→]{/} Prev/Next | {cyan-fg}[Esc]{/} Back",
-				);
+				setFooterContent(getFilterFooterContent("control", "board"));
 				syncBoardAreaLayout();
 				return;
 			}
 			if (moveOp) {
 				setFooterContent(
-					" {green-fg}MOVE MODE{/} | {cyan-fg}[←→]{/} Change Column | {cyan-fg}[↑↓]{/} Reorder | {cyan-fg}[Shift+↑↓]{/} Highlight | {cyan-fg}[Shift+M]{/} Select | {cyan-fg}[Enter]{/} Confirm | {cyan-fg}[Esc]{/} Cancel",
+					footerLine(
+						`{green-fg}${t("key.moveMode")}{/}`,
+						keyHint("←→", t("key.changeColumn")),
+						keyHint("↑↓", t("key.reorder")),
+						keyHint("Shift+↑↓", t("key.highlight")),
+						keyHint("Shift+M", t("key.select")),
+						keyHint("Enter", t("key.confirm")),
+						keyHint("Esc", t("key.cancel")),
+					),
 				);
 			} else {
 				const base = getBoardFooterContent({ hasProjects: configuredProjects.length > 0 });
-				setFooterContent(hasActiveSharedFilters() ? `${base} | {yellow-fg}Filtered{/}` : base);
+				setFooterContent(hasActiveSharedFilters() ? `${base} | {yellow-fg}${t("key.filtered")}{/}` : base);
 			}
 			syncBoardAreaLayout();
 		};
@@ -1144,7 +1157,7 @@ export async function renderBoardTui(
 					preferredTaskId ?? (moveOp ? (moveOp.highlightTaskId ?? moveOp.taskId) : getSelectedTaskId());
 
 				if (dataForColumns.length === 0) {
-					const fallbackStatus = currentStatuses[0] ?? "No Status";
+					const fallbackStatus = currentStatuses[0] ?? NO_STATUS_COLUMN;
 					rebuildColumns([{ status: fallbackStatus, tasks: [] }], selectedId);
 				} else if (shouldRebuildColumns(currentColumnsData, dataForColumns)) {
 					rebuildColumns(dataForColumns, selectedId);
@@ -1268,7 +1281,7 @@ export async function renderBoardTui(
 
 			if (creationError) {
 				const message = creationError instanceof Error ? creationError.message : "Unknown error";
-				showTransientFooter(` {red-fg}Error opening task composer: ${message}{/}`, 3000, false);
+				showTransientFooter(` {red-fg}${t("tui.composerError", { error: message })}{/}`, 3000, false);
 				if (hadPendingUpdate) renderView();
 				else screen.render();
 				return;
@@ -1465,27 +1478,23 @@ export async function renderBoardTui(
 					return;
 				}
 				if (result.reason === "editor_failed") {
-					showTransientFooter(" {red-fg}Editor exited with an error; task was not modified.{/}");
+					showTransientFooter(` {red-fg}${t("tui.editorError")}{/}`);
 					return;
 				}
 				if (result.reason === "not_found") {
-					showTransientFooter(` {red-fg}Task ${task.id} not found on this branch.{/}`);
+					showTransientFooter(` {red-fg}${t("tui.taskNotOnBranch", { id: task.id })}{/}`);
 					return;
 				}
 				if (result.reason === "identity_conflict") {
-					showTransientFooter(
-						" {red-fg}File identity is inconsistent; make the frontmatter id match the filename, then retry.{/}",
-					);
+					showTransientFooter(` {red-fg}${t("tui.identityMismatch")}{/}`);
 					return;
 				}
 				if (result.reason === "unreadable") {
-					showTransientFooter(" {red-fg}Could not read the saved file; fix its YAML/markdown syntax.{/}");
+					showTransientFooter(` {red-fg}${t("tui.unreadableFile")}{/}`);
 					return;
 				}
 				if (result.reason === "ambiguous") {
-					showTransientFooter(
-						" {red-fg}Numeric draft id is shared by multiple files; rename or fix their ids, then retry.{/}",
-					);
+					showTransientFooter(` {red-fg}${t("tui.sharedDraftId")}{/}`);
 					return;
 				}
 
@@ -1509,11 +1518,11 @@ export async function renderBoardTui(
 				renderView();
 				showTransientFooter(
 					result.changed
-						? ` {green-fg}Task ${result.task?.id ?? task.id} marked modified.{/}`
-						: ` {gray-fg}No changes detected for ${result.task?.id ?? task.id}.{/}`,
+						? ` {green-fg}${t("tui.markedModified", { id: result.task?.id ?? task.id })}{/}`
+						: ` {gray-fg}${t("tui.noChanges", { id: result.task?.id ?? task.id })}{/}`,
 				);
 			} catch (_error) {
-				showTransientFooter(" {red-fg}Failed to open editor.{/}");
+				showTransientFooter(` {red-fg}${t("tui.editorFailed")}{/}`);
 			}
 		};
 
@@ -1570,9 +1579,9 @@ export async function renderBoardTui(
 			contentArea.key(["y", "Y"], async () => {
 				const success = await copyToClipboard(task.id);
 				if (success) {
-					showTransientFooter(` {green-fg}Copied ${task.id} to clipboard{/}`);
+					showTransientFooter(` {green-fg}${t("tui.copied", { id: task.id })}{/}`);
 				} else {
-					showTransientFooter(" {red-fg}Failed to copy to clipboard{/}");
+					showTransientFooter(` {red-fg}${t("tui.copyFailed")}{/}`);
 				}
 			});
 
@@ -1710,7 +1719,7 @@ export async function renderBoardTui(
 
 				if (failures.length > 0) {
 					const details = failures.map((failure) => `${failure.taskId}: ${failure.reason}`).join("; ");
-					showTransientFooter(` {red-fg}Could not move ${failures.length} of the selected tasks — ${details}{/}`, 6000);
+					showTransientFooter(` {red-fg}${t("tui.moveFailures", { count: failures.length, details })}{/}`, 6000);
 				}
 			} catch (error) {
 				// On error, cancel the move and restore original positions
@@ -1815,7 +1824,7 @@ export async function renderBoardTui(
 
 		const enterMoveMode = () => {
 			if (hasMoveBlockingSharedFilters()) {
-				showTransientFooter(" {yellow-fg}Clear filters before moving tasks.{/}");
+				showTransientFooter(` {yellow-fg}${t("tui.clearFiltersBeforeMove")}{/}`);
 				return;
 			}
 
@@ -1827,7 +1836,7 @@ export async function renderBoardTui(
 
 			// Prevent move mode for cross-branch tasks
 			if (task.branch) {
-				showTransientFooter(` {red-fg}Cannot move task from branch "${task.branch}".{/}`);
+				showTransientFooter(` {red-fg}${t("tui.cannotMoveFromBranch", { branch: String(task.branch) })}{/}`);
 				return;
 			}
 
@@ -1928,14 +1937,14 @@ export async function renderBoardTui(
 			}
 			const targetId = candidateId;
 			if (!targetId || targetId === operation.taskId) {
-				showTransientFooter(" {yellow-fg}No task to select here.{/}");
+				showTransientFooter(` {yellow-fg}${t("tui.noTaskToSelect")}{/}`);
 				return;
 			}
 
 			// Cross-branch tasks cannot move, so they cannot be recruited either
 			const targetTask = currentTasks.find((task) => task.id === targetId);
 			if (targetTask?.branch) {
-				showTransientFooter(` {red-fg}Cannot move task from branch "${targetTask.branch}".{/}`);
+				showTransientFooter(` {red-fg}${t("tui.cannotMoveFromBranch", { branch: String(targetTask.branch) })}{/}`);
 				return;
 			}
 
@@ -2003,9 +2012,9 @@ export async function renderBoardTui(
 
 			const success = await copyToClipboard(task.id);
 			if (success) {
-				showTransientFooter(` {green-fg}Copied ${task.id} to clipboard{/}`);
+				showTransientFooter(` {green-fg}${t("tui.copied", { id: task.id })}{/}`);
 			} else {
-				showTransientFooter(" {red-fg}Failed to copy to clipboard{/}");
+				showTransientFooter(` {red-fg}${t("tui.copyFailed")}{/}`);
 			}
 		});
 
@@ -2036,12 +2045,14 @@ export async function renderBoardTui(
 				hideEmptyColumns = previous;
 				renderView();
 				showTransientFooter(
-					` {red-fg}Error saving hide empty columns setting: ${error instanceof Error ? error.message : "Unknown error"}{/}`,
+					` {red-fg}${t("tui.hideColumnsError", { error: error instanceof Error ? error.message : "Unknown error" })}{/}`,
 				);
 				return;
 			}
 			showTransientFooter(
-				hideEmptyColumns ? " {green-fg}Hiding empty columns{/}" : " {green-fg}Showing empty columns{/}",
+				hideEmptyColumns
+					? ` {green-fg}${t("tui.hidingEmptyColumns")}{/}`
+					: ` {green-fg}${t("tui.showingEmptyColumns")}{/}`,
 			);
 		};
 

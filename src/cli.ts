@@ -1937,7 +1937,7 @@ addHelpSchema(program.command("init [projectName]"), {
 		},
 	);
 
-const taskCmd = program.command("task").aliases(["tasks"]);
+const taskCmd = program.command("task").aliases(["tasks"]).description(t("help.task"));
 
 /** `--json` and `--plain` may be given to the parent `task` command as well as to its subcommand. */
 function taskReadOptions(options: ReadOutputOptions): ReadOutputOptions {
@@ -2800,9 +2800,9 @@ async function runTaskList(
 		printListWindow(displayTasks, listWindow, (windowTasks) => {
 			if (windowTasks.length === 0) {
 				if (resolvedParentId) {
-					process.stdout.write(`No child tasks found for parent task ${parentDisplayId}.\n`);
+					process.stdout.write(`${t("taskList.noChildTasks", { id: String(parentDisplayId) })}\n`);
 				} else {
-					process.stdout.write("No tasks found.\n");
+					process.stdout.write(`${t("taskList.noTasks")}\n`);
 				}
 				return;
 			}
@@ -4157,7 +4157,7 @@ async function viewDraftById(core: Core, taskId: string, options?: { plain?: boo
 	}
 }
 
-const draftCmd = program.command("draft");
+const draftCmd = program.command("draft").description(t("help.draft"));
 
 const draftListCommand = addHelpSchema(draftCmd.command("list"), {
 	reads: "Drafts under the configured drafts directory",
@@ -4403,7 +4403,7 @@ draftCmd
 		await viewDraftById(core, taskId, options);
 	});
 
-const milestoneCmd = program.command("milestone").aliases(["milestones"]);
+const milestoneCmd = program.command("milestone").aliases(["milestones"]).description(t("help.milestone"));
 
 const milestoneListCommand = addHelpSchema(milestoneCmd.command("list"), {
 	reads: "Milestone files and local task milestone values",
@@ -4727,9 +4727,9 @@ async function handleBoardView(options: { layout?: string; vertical?: boolean; m
 	});
 }
 
-addBoardOptions(boardCmd).description("display tasks in a Kanban board").action(handleBoardView);
+addBoardOptions(boardCmd).description(t("help.board")).action(handleBoardView);
 
-addBoardOptions(boardCmd.command("view").description("display tasks in a Kanban board")).action(handleBoardView);
+addBoardOptions(boardCmd.command("view").description(t("help.board"))).action(handleBoardView);
 
 boardCmd
 	.command("export [filename]")
@@ -4797,7 +4797,7 @@ boardCmd
 		}
 	});
 
-const docCmd = program.command("doc");
+const docCmd = program.command("doc").description(t("help.doc"));
 
 addHelpSchema(docCmd.command("create <title>"), {
 	required: [{ name: "title", type: "String", description: "Document title" }],
@@ -5074,7 +5074,7 @@ addHelpSchema(docCmd.command("view <docId>"), {
 		}
 	});
 
-const decisionCmd = program.command("decision");
+const decisionCmd = program.command("decision").description(t("help.decision"));
 
 const decisionSectionHelpFields = [
 	{ name: "context", type: "Markdown", description: "Replace Context; empty text clears it, omission keeps it" },

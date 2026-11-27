@@ -5,8 +5,10 @@
 
 import type { BoxInterface, ScreenInterface, TextboxInterface } from "neo-neo-bblessed";
 import { box, textbox } from "neo-neo-bblessed";
+import type { MessageKey } from "../../i18n/en.ts";
+import { t, translateStatus } from "../../i18n/index.ts";
 import { formatLabelSummary } from "../../utils/label-filter.ts";
-import { NO_MILESTONE_FILTER_LABEL, NO_MILESTONE_FILTER_VALUE } from "../../utils/milestone-filter.ts";
+import { NO_MILESTONE_FILTER_VALUE } from "../../utils/milestone-filter.ts";
 
 export type FilterControlId = "search" | "status" | "type" | "project" | "priority" | "labels" | "milestone";
 
@@ -31,6 +33,15 @@ export interface FilterHeaderOptions {
 	onFilterPickerOpen: (filterId: Exclude<FilterControlId, "search">) => void;
 }
 
+interface FilterItemDefinition {
+	id: FilterControlId;
+	labelKey: MessageKey;
+	/** Minimum label column width; a wider translated label widens it. */
+	labelWidth: number;
+	minWidth: number;
+	flexGrow: boolean;
+}
+
 interface FilterItem {
 	id: FilterControlId;
 	labelText: string;
@@ -49,14 +60,14 @@ interface LayoutResult {
 	height: number;
 }
 
-const ALL_FILTER_ITEMS: FilterItem[] = [
-	{ id: "search", labelText: "Search:", labelWidth: 8, minWidth: 28, flexGrow: true },
-	{ id: "status", labelText: "Status:", labelWidth: 8, minWidth: 22, flexGrow: false },
-	{ id: "type", labelText: "Type:", labelWidth: 6, minWidth: 18, flexGrow: false },
-	{ id: "project", labelText: "Project:", labelWidth: 9, minWidth: 20, flexGrow: false },
-	{ id: "priority", labelText: "Priority:", labelWidth: 9, minWidth: 20, flexGrow: false },
-	{ id: "milestone", labelText: "Milestone:", labelWidth: 10, minWidth: 22, flexGrow: false },
-	{ id: "labels", labelText: "Labels:", labelWidth: 8, minWidth: 18, flexGrow: false },
+const ALL_FILTER_ITEMS: FilterItemDefinition[] = [
+	{ id: "search", labelKey: "filter.search", labelWidth: 8, minWidth: 28, flexGrow: true },
+	{ id: "status", labelKey: "filter.status", labelWidth: 8, minWidth: 22, flexGrow: false },
+	{ id: "type", labelKey: "filter.type", labelWidth: 6, minWidth: 18, flexGrow: false },
+	{ id: "project", labelKey: "filter.project", labelWidth: 9, minWidth: 20, flexGrow: false },
+	{ id: "priority", labelKey: "filter.priority", labelWidth: 9, minWidth: 20, flexGrow: false },
+	{ id: "milestone", labelKey: "filter.milestone", labelWidth: 10, minWidth: 22, flexGrow: false },
+	{ id: "labels", labelKey: "filter.labels", labelWidth: 8, minWidth: 18, flexGrow: false },
 ];
 
 const PADDING = 1; // Left padding inside header box
@@ -90,7 +101,11 @@ function normalizeVisibleFilters(visible: FilterControlId[] | undefined): Filter
 
 function visibleFilterItems(ids: FilterControlId[]): FilterItem[] {
 	const allowed = new Set(ids);
-	return ALL_FILTER_ITEMS.filter((item) => allowed.has(item.id));
+	return ALL_FILTER_ITEMS.filter((item) => allowed.has(item.id)).map(({ labelKey, ...item }) => {
+		const labelText = t(labelKey);
+		// 全角のラベルは表示幅が広いので、ラベル欄をその幅まで広げる
+		return { ...item, labelText, labelWidth: Math.max(item.labelWidth, Bun.stringWidth(labelText)) };
+	});
 }
 
 /**
@@ -638,26 +653,29 @@ export class FilterHeader {
 	private getPopupButtonContent(field: Exclude<FilterControlId, "search">): string {
 		switch (field) {
 			case "status":
-				if (this.state.status.length === 0) return "All ▼";
-				if (this.state.status.length === 1) return `${this.state.status[0]} ▼`;
-				return `${this.state.status.length} selected ▼`;
+				if (this.state.status.length === 0) return `${t("filter.all")} ▼`;
+				if (this.state.status.length === 1) return `${translateStatus(this.state.status[0] ?? "")} ▼`;
+				return `${t("filter.selectedCount", { count: this.state.status.length })} ▼`;
 			case "type":
-				if (this.state.taskTypes.length === 0) return "All ▼";
+				if (this.state.taskTypes.length === 0) return `${t("filter.all")} ▼`;
 				if (this.state.taskTypes.length === 1) return `${this.state.taskTypes[0]} ▼`;
-				return `${this.state.taskTypes.length} selected ▼`;
+				return `${t("filter.selectedCount", { count: this.state.taskTypes.length })} ▼`;
 			case "project":
-				if (this.state.projects.length === 0) return "All ▼";
+				if (this.state.projects.length === 0) return `${t("filter.all")} ▼`;
 				if (this.state.projects.length === 1) return `${this.state.projects[0]} ▼`;
-				return `${this.state.projects.length} selected ▼`;
+				return `${t("filter.selectedCount", { count: this.state.projects.length })} ▼`;
 			case "priority":
-				return this.state.priority ? `${this.state.priority} ▼` : "All ▼";
+				return this.state.priority ? `${this.state.priority} ▼` : `${t("filter.all")} ▼`;
 			case "milestone":
 				if (!this.state.milestone) {
-					return "All ▼";
+					return `${t("filter.all")} ▼`;
 				}
-				return `${this.state.milestone === NO_MILESTONE_FILTER_VALUE ? NO_MILESTONE_FILTER_LABEL : this.state.milestone} ▼`;
+				return `${this.state.milestone === NO_MILESTONE_FILTER_VALUE ? t("filter.noMilestone") : this.state.milestone} ▼`;
 			case "labels": {
-				const summary = formatLabelSummary(this.state.labels).replace(/^Labels:\s*/, "");
+				const summary =
+					this.state.labels.length === 0
+						? t("filter.all")
+						: formatLabelSummary(this.state.labels).replace(/^Labels:\s*/, "");
 				return `${summary} ▼`;
 			}
 		}
