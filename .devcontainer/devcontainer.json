@@ -1,0 +1,18 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/alpine
+{
+	"name": "Claude Code Dev Container",
+	// Check with "docker buildx imagetools inspect mcr.microsoft.com/devcontainers/base:ubuntu-24.04"
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04@sha256:d94c97dd9cacf183d0a6fd12a8e87b526e9e928307674ae9c94139139c0c6eae",
+	"runArgs": ["--name", "test"],
+
+	// Claude Code Official Dev Container Feature, Fixed Versions with lockfiles
+	"features": {
+		"ghcr.io/devcontainers/features/node:2.1.2": {},
+		"ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+		// GitHub CLI (gh)
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+
+	"remoteUser": "vscode"
+}
