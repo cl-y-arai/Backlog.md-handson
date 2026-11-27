@@ -1,0 +1,33 @@
+// Cloudflare Workers + Containers で Backlog.md の Web UI を公開する設定
+// Worker の名前はダッシュボードで作った Worker と一致させる（違うと Workers Builds が失敗する）
+{
+	"name": "backlog-md",
+	"main": "cloudflare/worker.js",
+	"compatibility_date": "2026-11-20",
+	"containers": [
+		{
+			"class_name": "BacklogContainer",
+			"image": "./Dockerfile",
+			"max_instances": 1,
+			"instance_type": "basic"
+		}
+	],
+	"durable_objects": {
+		"bindings": [{ "class_name": "BacklogContainer", "name": "BACKLOG" }]
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["BacklogContainer"] }],
+	// Worker Previews（main 以外のブランチ）は上の設定を引き継がないので、同じ内容をもう一度書く
+	"previews": {
+		"containers": [
+			{
+				"class_name": "BacklogContainer",
+				"image": "./Dockerfile",
+				"max_instances": 1,
+				"instance_type": "basic"
+			}
+		],
+		"durable_objects": {
+			"bindings": [{ "class_name": "BacklogContainer", "name": "BACKLOG" }]
+		}
+	}
+}
