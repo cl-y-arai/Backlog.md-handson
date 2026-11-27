@@ -43,6 +43,7 @@ import {
 	taskViewJson,
 } from "./formatters/json-output.ts";
 import { formatTaskPlainText } from "./formatters/task-plain-text.ts";
+import { localizeStatus, t } from "./i18n/index.ts";
 import {
 	type AgentInstructionFile,
 	addAgentInstructions,
@@ -323,7 +324,7 @@ function formatTaskEditError(error: unknown, taskId: string, commandKind = "task
 function formatPlainTaskListRow(task: Task, options: { includeStatus?: boolean } = {}): string {
 	const priorityIndicator = task.priority ? `[${task.priority.toUpperCase()}] ` : "";
 	const typeIndicator = task.type ? `[${task.type}] ` : "";
-	const statusIndicator = options.includeStatus && task.status ? ` (${task.status})` : "";
+	const statusIndicator = options.includeStatus && task.status ? ` (${localizeStatus(task.status)})` : "";
 	const acceptanceCriteria = formatAcceptanceCriteriaSummarySuffix(task);
 	const dueDate = task.dueDate ? ` (due ${formatUtcDateForDisplay(task.dueDate)})` : "";
 	return `  ${priorityIndicator}${typeIndicator}${task.id} - ${task.title}${statusIndicator}${acceptanceCriteria}${dueDate}`;
@@ -1061,7 +1062,7 @@ if (shouldRunMigration) {
 const program = new Command();
 program
 	.name("backlog")
-	.description("Backlog.md - Project management CLI")
+	.description(t("program.description"))
 	.version(version, "-v, --version", "display version number")
 	.showSuggestionAfterError()
 	.showHelpAfterError("Run with --help to see accepted fields and examples.");
@@ -1096,7 +1097,7 @@ addHelpSchema(program.command("init [projectName]"), {
 		'backlog init "My Project" --defaults --agent-instructions agents,claude',
 	],
 })
-	.description("initialize backlog project in the current directory (or BACKLOG_CWD when set)")
+	.description(t("command.init"))
 	.option(
 		"--agent-instructions <instructions>",
 		"comma-separated agent instructions to create. Valid: claude, agents, gemini, copilot, cursor (writes AGENTS.md), none. Use 'none' to skip; when combined with others, 'none' is ignored.",
@@ -2228,7 +2229,7 @@ const searchCommand = addHelpSchema(program.command("search [query]"), {
 		'backlog search "auth" --max-count 20 --skip 20 --plain',
 	],
 })
-	.description("search tasks, documents, and decisions using the shared index")
+	.description(t("command.search"))
 	.option("--type <type>", "limit results to type (task, document, decision)", createMultiValueAccumulator())
 	.option(
 		"--task-type <type>",
@@ -2610,13 +2611,13 @@ function printTaskSections(tasks: Task[], sortField: string | undefined, statuse
 	// Use the stdout stream, as JSON output does, so pending pipe writes keep the CLI alive.
 	for (const section of sectionTasks(tasks, sortField, statuses)) {
 		if (section.status === null) {
-			process.stdout.write("Tasks (sorted by priority):\n");
+			process.stdout.write(`${t("taskList.sortedHeading")}\n`);
 			for (const task of section.tasks) {
 				process.stdout.write(`${formatPlainTaskListRow(task, { includeStatus: true })}\n`);
 			}
 			continue;
 		}
-		process.stdout.write(`${section.status || "No Status"}:\n`);
+		process.stdout.write(`${section.status ? localizeStatus(section.status) : t("taskList.noStatus")}:\n`);
 		for (const task of section.tasks) {
 			process.stdout.write(`${formatPlainTaskListRow(task)}\n`);
 		}
@@ -2799,9 +2800,9 @@ async function runTaskList(
 		printListWindow(displayTasks, listWindow, (windowTasks) => {
 			if (windowTasks.length === 0) {
 				if (resolvedParentId) {
-					process.stdout.write(`No child tasks found for parent task ${parentDisplayId}.\n`);
+					process.stdout.write(`${t("taskList.noChildTasks", { parentId: parentDisplayId ?? "" })}\n`);
 				} else {
-					process.stdout.write("No tasks found.\n");
+					process.stdout.write(`${t("taskList.noTasks")}\n`);
 				}
 				return;
 			}
@@ -4726,9 +4727,9 @@ async function handleBoardView(options: { layout?: string; vertical?: boolean; m
 	});
 }
 
-addBoardOptions(boardCmd).description("display tasks in a Kanban board").action(handleBoardView);
+addBoardOptions(boardCmd).description(t("command.board")).action(handleBoardView);
 
-addBoardOptions(boardCmd.command("view").description("display tasks in a Kanban board")).action(handleBoardView);
+addBoardOptions(boardCmd.command("view").description(t("command.board"))).action(handleBoardView);
 
 boardCmd
 	.command("export [filename]")
@@ -5300,7 +5301,7 @@ const agentsCmd = addHelpSchema(program.command("agents"), {
 });
 
 agentsCmd
-	.description("manage the short Backlog.md CLI nudge in agent instruction files")
+	.description(t("command.agents"))
 	.option(
 		"--update-instructions",
 		"update the Backlog.md CLI nudge in agent instruction files while preserving existing content",
@@ -5366,7 +5367,7 @@ const configCmd = addHelpSchema(program.command("config"), {
 	output: "Interactive wizard results or subcommand output",
 	examples: ["backlog config", "backlog config list", "backlog config get defaultEditor"],
 })
-	.description("manage backlog configuration")
+	.description(t("command.config"))
 	.action(async () => {
 		try {
 			const cwd = await requireProjectRoot();
@@ -5855,9 +5856,7 @@ addHelpSchema(program.command("doctor"), {
 		"Duplicate-ID diagnosis for tasks, documents, decisions, and drafts, a deterministic task repair preview, a reference-review report, a report of self-referential and cyclic task dependencies, and the archived task files stored outside the archive folder",
 	examples: ["backlog doctor", "backlog doctor --fix", "backlog doctor --fix --yes"],
 })
-	.description(
-		"diagnose duplicate task, document, and decision IDs, report self-referential and cyclic dependencies, safely repair duplicate task IDs, and move archived tasks into the archive folder",
-	)
+	.description(t("command.doctor"))
 	.option("--fix", "apply the displayed duplicate task ID repair and archived task move")
 	.option("--yes", "confirm --fix without prompting")
 	.action(async (options: { fix?: boolean; yes?: boolean }) => {
@@ -6023,7 +6022,7 @@ addHelpSchema(program.command("cleanup"), {
 		"Interactive cleanup summary. The command asks for an age and a confirmation, so it needs an interactive terminal for both its input and its output; without that it exits non-zero and archives nothing",
 	examples: ["backlog cleanup"],
 })
-	.description("archive tasks in the final status that are older than a chosen age")
+	.description(t("command.cleanup"))
 	.action(async () => {
 		// Cleanup asks two questions. Unless its input and its output are both a terminal nobody can
 		// answer them, and exiting 0 after archiving nothing would read as success.
@@ -6129,7 +6128,7 @@ addHelpSchema(program.command("cleanup"), {
 // Browser command for web UI
 program
 	.command("browser")
-	.description("open browser interface on this machine only at 127.0.0.1 (press Ctrl+C or Cmd+C to stop)")
+	.description(t("command.browser"))
 	.option("-p, --port <port>", "port to run server on")
 	.option("--no-open", "don't automatically open browser")
 	.option("--non-interactive", "automatically use next free port without asking")
@@ -6209,7 +6208,7 @@ program
 // Overview command for statistics
 program
 	.command("overview")
-	.description("display project statistics and metrics")
+	.description(t("command.overview"))
 	.action(async () => {
 		try {
 			const cwd = await requireProjectRoot();

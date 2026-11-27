@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Command } from "commander";
 import { getCompletions } from "../completions/helper.ts";
+import { t } from "../i18n/index.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -482,7 +483,7 @@ export async function installCompletion(
  * Register the completion command and subcommands
  */
 export function registerCompletionCommand(program: Command): void {
-	const completionCmd = program.command("completion").description("manage shell completion scripts");
+	const completionCmd = program.command("completion").description(t("command.completion"));
 
 	// Hidden command used by shell completion scripts
 	completionCmd

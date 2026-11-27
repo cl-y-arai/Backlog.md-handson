@@ -1,4 +1,5 @@
 import type { Command } from "commander";
+import { t } from "../i18n/index.ts";
 import {
 	getInstructionGuideByKey,
 	INSTRUCTION_GUIDE_KEYS,
@@ -64,7 +65,7 @@ export function registerInstructionsCommand(program: Command): void {
 		output: "Guide index, or markdown guide text when a guide is selected",
 		examples: ["backlog instructions", "backlog instructions overview", "backlog instructions task-execution"],
 	})
-		.description("show Backlog.md workflow instructions")
+		.description(t("command.instructions"))
 		.option("--list", "list available instruction guides")
 		.action((guide: string | undefined, options: InstructionsOptions) => {
 			if (options.list || guide === undefined) {
